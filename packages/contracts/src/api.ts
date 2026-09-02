@@ -13,6 +13,7 @@ export const apiV1 = {
   recordEntries: (id: string) => `/api/v1/records/${id}/entries`,
   recordScores: (id: string) => `/api/v1/records/${id}/scores`,
   recordPersist: (id: string) => `/api/v1/records/${id}/persist`,
+  recordPersistFromVoice: (id: string) => `/api/v1/records/${id}/persist-from-voice`,
   recordExport: (id: string) => `/api/v1/records/${id}/export`,
   recordExportJob: (jobId: string) => `/api/v1/records/exports/${jobId}`,
   locationSearch: "/api/v1/location/search",

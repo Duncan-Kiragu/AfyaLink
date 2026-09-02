@@ -137,6 +137,24 @@ a.voice-btn {
   text-align: center;
 }
 
+.fact-select {
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+}
+
+.fact-select-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0.45rem 0;
+}
+
+.history-list {
+  padding-left: 1.2rem;
+}
+
 label {
   display: grid;
   gap: 0.35rem;

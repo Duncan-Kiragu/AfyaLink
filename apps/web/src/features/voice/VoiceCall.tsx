@@ -1,8 +1,9 @@
 import { ConversationProvider, useConversationControls, useConversationStatus } from "@elevenlabs/react";
-import type { ConsultationSummary, SafetyAssessment } from "@kkd/contracts";
+import type { ConsultationSummary, ReportedSymptom, SafetyAssessment } from "@kkd/contracts";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import { computeRecordScore, ensureRecordForVoice, persistFactsFromVoice } from "../records";
 import {
   ackVoiceDisclosure,
   cancelInterviewCallback,
@@ -39,6 +40,10 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
   const [callbackNote, setCallbackNote] = useState<string>();
   const [callbackRequested, setCallbackRequested] = useState(false);
   const [enabled, setEnabled] = useState(true);
+  const [saveCandidates, setSaveCandidates] = useState<ReportedSymptom[]>([]);
+  const [selectedFactIds, setSelectedFactIds] = useState<string[]>([]);
+  const [savingRecord, setSavingRecord] = useState(false);
+  const [saveNote, setSaveNote] = useState<string>();
   const { startSession, endSession } = useConversationControls();
   const { status, message } = useConversationStatus();
 
@@ -131,6 +136,9 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
       const payload = await fetchVoiceSummary(sessionId);
       setSummary(payload.summary);
       setSafety(payload.safety);
+      const symptoms = payload.session.symptoms ?? [];
+      setSaveCandidates(symptoms);
+      setSelectedFactIds(symptoms.map((item) => item.id));
       setPhase("summary");
     } catch {
       setError(t("error.retry"));
@@ -194,6 +202,37 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
     setCallbackNote(undefined);
     setSmsNote(undefined);
     setCallbackRequested(false);
+    setSaveCandidates([]);
+    setSelectedFactIds([]);
+    setSaveNote(undefined);
+  }
+
+  async function onSaveRecord() {
+    if (!sessionId) {
+      return;
+    }
+    if (selectedFactIds.length === 0) {
+      setSaveNote(t("records.needSelection"));
+      return;
+    }
+    setSavingRecord(true);
+    setError(undefined);
+    try {
+      const record = await ensureRecordForVoice();
+      await persistFactsFromVoice(record.id, sessionId, selectedFactIds);
+      await computeRecordScore(record.id);
+      setSaveNote(t("records.saved"));
+    } catch {
+      setError(t("error.retry"));
+    } finally {
+      setSavingRecord(false);
+    }
+  }
+
+  function toggleFact(id: string) {
+    setSelectedFactIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    );
   }
 
   if (!enabled) {
@@ -293,6 +332,37 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
             ))}
           </ul>
           <p>{summary.recommendedNextAction}</p>
+          {saveCandidates.length > 0 ? (
+            <fieldset className="fact-select">
+              <legend>{t("records.selectFacts")}</legend>
+              {saveCandidates.map((item) => (
+                <label key={item.id} className="fact-select-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedFactIds.includes(item.id)}
+                    onChange={() => toggleFact(item.id)}
+                  />
+                  <span>{item.patientWording ?? item.concept}</span>
+                </label>
+              ))}
+              <div className="voice-actions">
+                <button
+                  className="voice-btn voice-btn-primary"
+                  type="button"
+                  disabled={savingRecord}
+                  onClick={() => void onSaveRecord()}
+                >
+                  {savingRecord ? t("records.saving") : t("consent.saveRecord")}
+                </button>
+                {saveNote ? (
+                  <Link className="voice-btn voice-btn-ghost" to="/profile/history">
+                    {t("records.viewHistory")}
+                  </Link>
+                ) : null}
+              </div>
+              {saveNote ? <p>{saveNote}</p> : null}
+            </fieldset>
+          ) : null}
           <div className="voice-actions">
             <Link className="voice-btn voice-btn-accent" to="/care-near-me">
               {t("voice.sendToHospital")}

@@ -15,6 +15,8 @@ const baseSchema = z.object({
   SUPABASE_URL: z.string().optional(),
   SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  /** Dashboard name for the service-role key. Copied onto SUPABASE_SERVICE_ROLE_KEY in loadEnv. */
+  SUPABASE_SECRET_KEY: z.string().optional(),
   SUPABASE_DB_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
@@ -109,5 +111,8 @@ export const envSchema = baseSchema.superRefine((env, ctx) => {
 export type Env = z.infer<typeof envSchema>;
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  return envSchema.parse(source);
+  return envSchema.parse({
+    ...source,
+    SUPABASE_SERVICE_ROLE_KEY: source.SUPABASE_SERVICE_ROLE_KEY || source.SUPABASE_SECRET_KEY,
+  });
 }

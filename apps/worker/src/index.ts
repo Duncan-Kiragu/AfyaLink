@@ -9,6 +9,7 @@ import { processFollowups } from "./processors/followups.js";
 import { processNotifications } from "./processors/notifications.js";
 import { processProviderSync } from "./processors/provider-sync.js";
 import { processPurges } from "./processors/purges.js";
+import { startRecordJobWorkers } from "./processors/record-jobs.js";
 import { processVoiceCallbacks, startVoiceCallbackWorker } from "./processors/voice-callbacks.js";
 import { queueNames } from "./queues.js";
 
@@ -39,6 +40,7 @@ log.info(
 );
 
 startVoiceCallbackWorker();
+startRecordJobWorkers();
 
 setInterval(() => {
   log.info({ event: "worker_heartbeat" }, "worker idle");

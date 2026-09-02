@@ -247,7 +247,14 @@ export function getRecordStore(): RecordStore {
     return memoryRecordStore;
   }
   const env = loadEnv();
-  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY && createServiceRoleClient()) {
+  const supabaseReady = Boolean(
+    env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY && createServiceRoleClient(),
+  );
+  const wantLiveSupabase = process.env.KKD_RECORDS_STORE === "supabase";
+  if (env.APP_ENV === "local" && !wantLiveSupabase) {
+    return memoryRecordStore;
+  }
+  if (supabaseReady) {
     return supabaseRecordStore;
   }
   if (env.APP_ENV === "local") {

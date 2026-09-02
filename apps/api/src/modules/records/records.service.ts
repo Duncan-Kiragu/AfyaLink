@@ -12,16 +12,20 @@ import {
   type HealthRecord,
   type PersistFactsInput,
   type PersistFactsResult,
+  type PersistFromVoiceInput,
   type RecordEntry,
   type RecordEntryInput,
   type RecordExportBundle,
   type RecordFilters,
   type StoredScoreSnapshot,
 } from "@kkd/contracts";
+import { evaluateSeverity } from "@kkd/clinical-safety";
 import { loadEnv } from "@kkd/config";
 import { createLogger } from "@kkd/observability";
 import { DEFAULT_COMPLETENESS_FIELD_IDS, computeSystemScore } from "@kkd/scoring";
 import { httpError } from "../../lib/http-error.js";
+import { getVoiceSession } from "../voice/voice.store.js";
+import { getExportBundleFromRedis, putExportBundleInRedis } from "./export-bundle-cache.js";
 import { enqueueRecordJob } from "./records.queue.js";
 import {
   comparablePointsFromEntries,
@@ -31,6 +35,8 @@ import {
   latestReportedSeverity,
   type RecordStore,
 } from "./records.store.js";
+import { entriesToSeverityInput } from "./severity-from-entries.js";
+import { voiceSessionToPersistableFacts } from "./voice-facts.js";
 
 const log = createLogger("records.service");
 
@@ -166,6 +172,27 @@ export async function persistSelectedFacts(
   };
 }
 
+export async function persistFactsFromVoiceSession(
+  userId: string,
+  recordId: string,
+  input: PersistFromVoiceInput,
+): Promise<PersistFactsResult> {
+  const voice = getVoiceSession(input.sessionId);
+  if (!voice || voice.closed) {
+    throw httpError("voice_session_not_found", 404);
+  }
+  const facts = voiceSessionToPersistableFacts(voice.session, input.selectedFactIds);
+  if (facts.length === 0) {
+    throw httpError("no_selected_facts", 400);
+  }
+  return persistSelectedFacts(userId, recordId, {
+    consentVersion: input.consentVersion,
+    sourceChannel: "voice",
+    sourceSessionId: voice.session.id,
+    facts,
+  });
+}
+
 export async function computeAndStoreScore(
   userId: string,
   recordId: string,
@@ -175,8 +202,11 @@ export async function computeAndStoreScore(
   const entries = await store().listEntries(userId, record.id, {});
   const requiredFieldIds = input.requiredFieldIds ?? [...DEFAULT_COMPLETENESS_FIELD_IDS];
   const answeredFieldIds = input.answeredFieldIds ?? deriveAnsweredFieldIds(entries);
+  const assessment = evaluateSeverity(entriesToSeverityInput(entries), {
+    executeUnreviewedDraftRules: true,
+  });
   const snapshot = computeSystemScore({
-    urgencyClass: input.urgencyClass,
+    urgencyClass: assessment.urgency,
     requiredFieldIds,
     answeredFieldIds,
     inferredFieldIds: input.inferredFieldIds,
@@ -189,7 +219,12 @@ export async function computeAndStoreScore(
     recordId: record.id,
   };
   await store().addScore(userId, record.id, stored);
-  log.info({ event: "score_snapshot_created", status: stored.algorithmVersion, urgency: stored.urgencyClass });
+  log.info({
+    event: "score_snapshot_created",
+    status: stored.algorithmVersion,
+    urgency: stored.urgencyClass,
+    promptVersion: assessment.ruleSetVersion,
+  });
   return stored;
 }
 
@@ -237,13 +272,15 @@ export async function exportRecord(
     expiresAt,
     downloadPath: `/api/v1/records/exports/${jobId}?exp=${exp}&sig=${sig}`,
   };
-  await store().putExport({
+  const cacheEntry = {
     job,
     userId,
     recordId,
     bundleJson: JSON.stringify(bundle),
     expiresAtMs,
-  });
+  };
+  await putExportBundleInRedis(cacheEntry);
+  await store().putExport(cacheEntry);
   await enqueueRecordJob({
     kind: "record_export",
     idempotencyKey: `record-export:${jobId}`,
@@ -262,7 +299,7 @@ export async function readExport(
   exp?: string,
   sig?: string,
 ): Promise<RecordExportBundle> {
-  const entry = await store().getExport(jobId);
+  const entry = (await getExportBundleFromRedis(jobId)) ?? (await store().getExport(jobId));
   if (!entry || entry.userId !== userId) {
     throw httpError("export_not_found", 404);
   }
@@ -287,7 +324,16 @@ export async function deleteRecord(userId: string, recordId: string): Promise<vo
 }
 
 export async function deleteAllRecords(userId: string): Promise<number> {
-  const count = await store().deleteAllRecords(requireUserId(userId));
+  const owned = await store().listRecords(requireUserId(userId));
+  const count = await store().deleteAllRecords(userId);
+  for (const record of owned) {
+    await enqueueRecordJob({
+      kind: "record_purge_verify",
+      idempotencyKey: `record-purge:${record.id}`,
+      recordId: record.id,
+      userId,
+    });
+  }
   log.info({ event: "records_deleted_all", status: String(count) });
   return count;
 }

@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
 import { RECORDS_CONSENT_VERSION } from "@kkd/contracts";
 import { createApp } from "../../app.js";
+import { acknowledgeDisclosure, createVoiceSession, submitAnswer } from "../voice/voice.service.js";
+import { resetVoiceSessions } from "../voice/voice.store.js";
 import { resetRecordStore } from "./records.store.js";
 
 const app = createApp();
@@ -38,6 +40,7 @@ describe("health records HTTP", () => {
   beforeEach(() => {
     process.env.FEATURE_HEALTH_RECORDS = "true";
     resetRecordStore();
+    resetVoiceSessions();
   });
 
   afterEach(() => {
@@ -47,6 +50,7 @@ describe("health records HTTP", () => {
       process.env.FEATURE_HEALTH_RECORDS = previousFlag;
     }
     resetRecordStore();
+    resetVoiceSessions();
   });
 
   it("returns 404 when the feature flag is off", async () => {
@@ -106,9 +110,9 @@ describe("health records HTTP", () => {
 
     const scored = await asUser(USER_A)
       .post(`/api/v1/records/${recordId}/scores`)
-      .send({ urgencyClass: "soon" });
+      .send({});
     expect(scored.status).toBe(201);
-    expect(scored.body.score.urgencyClass).toBe("soon");
+    expect(scored.body.score.urgencyClass).toBe("unknown");
     expect(scored.body.score.completenessPercent).toBeGreaterThan(0);
     expect(scored.body.score.trajectory).toBe("insufficient_data");
     expect(scored.body.score).not.toHaveProperty("diseaseProbability");
@@ -184,5 +188,62 @@ describe("health records HTTP", () => {
         ],
       });
     expect(persist.status).toBe(403);
+  });
+
+  it("takes urgency from the draft safety engine, not the request body", async () => {
+    const recordId = await createOwnedRecord(USER_A);
+    const persist = await asUser(USER_A)
+      .post(`/api/v1/records/${recordId}/persist`)
+      .send({
+        consentVersion: RECORDS_CONSENT_VERSION,
+        sourceChannel: "web",
+        facts: [
+          {
+            entryType: "symptom",
+            conceptCode: "abdominal_pain",
+            patientWording: "Severe abdominal pain",
+            valueJson: { severity: 8, confidence: "explicit" },
+            effectiveAt: "2026-09-02T04:00:00.000Z",
+            confidence: "explicit",
+          },
+        ],
+      });
+    expect(persist.status).toBe(201);
+
+    const scored = await asUser(USER_A)
+      .post(`/api/v1/records/${recordId}/scores`)
+      .send({ urgencyClass: "monitor" });
+    expect(scored.status).toBe(201);
+    expect(scored.body.score.urgencyClass).toBe("urgent_today");
+  });
+
+  it("persists selected facts from an open voice session", async () => {
+    const recordId = await createOwnedRecord(USER_A);
+    const voice = createVoiceSession("en");
+    acknowledgeDisclosure(voice.session.id, "voice.v1");
+    const answered = submitAnswer(voice.session.id, "Stomach pain since morning 6/10");
+    const symptomId = answered.session.symptoms[0]?.id;
+    expect(symptomId).toBeDefined();
+
+    const persist = await asUser(USER_A)
+      .post(`/api/v1/records/${recordId}/persist-from-voice`)
+      .send({
+        consentVersion: RECORDS_CONSENT_VERSION,
+        sessionId: voice.session.id,
+        selectedFactIds: [symptomId],
+      });
+    expect(persist.status).toBe(201);
+    expect(persist.body.persistedCount).toBe(1);
+    expect(persist.body.entries[0]?.sourceChannel).toBe("voice");
+    expect(JSON.stringify(persist.body)).not.toContain(voice.session.id);
+
+    const missingSession = await asUser(USER_A)
+      .post(`/api/v1/records/${recordId}/persist-from-voice`)
+      .send({
+        consentVersion: RECORDS_CONSENT_VERSION,
+        sessionId: "00000000-0000-4000-8000-000000000000",
+        selectedFactIds: [symptomId],
+      });
+    expect(missingSession.status).toBe(404);
   });
 });

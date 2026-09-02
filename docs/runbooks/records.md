@@ -5,13 +5,16 @@ Patient-owned persistent records and non-diagnostic process scores. Clinic/anony
 ## Local demo
 
 1. Set `FEATURE_HEALTH_RECORDS=true` (see `.env.example`).
-2. `APP_ENV=local` uses the in-memory store when Supabase is not configured.
+2. `APP_ENV=local` uses the in-memory store unless `KKD_RECORDS_STORE=supabase` is set. Live Supabase needs `20260902120000_health_records.sql` applied first (the project we probed did not have `health_records` yet).
 3. Authenticate as a user. In local/test only, send `x-kkd-user-id: <uuid>`. Staging and production must use a Supabase access token (`Authorization: Bearer`).
 4. `POST /api/v1/records/consent` with `{ "version": "records.persist.v1" }`.
-5. `POST /api/v1/records` then `POST /api/v1/records/:id/persist` with the **selected** facts only (no transcript field).
-6. `POST /api/v1/records/:id/scores` with `urgencyClass` from Antonia’s safety engine (do not invent one).
-7. `GET /api/v1/records/:id/scores` and `POST /api/v1/records/:id/export` `{ "format": "json" }`.
+5. `POST /api/v1/records` then persist selected facts:
+   - `POST /api/v1/records/:id/persist` with an explicit `facts[]` list (no transcript field), or
+   - `POST /api/v1/records/:id/persist-from-voice` with `{ consentVersion, sessionId, selectedFactIds }` while the voice session is still open.
+6. `POST /api/v1/records/:id/scores` with `{}`. Urgency is computed by `evaluateSeverity` using the draft red-flag rule set (`executeUnreviewedDraftRules: true`). A client `urgencyClass` is ignored.
+7. `GET /api/v1/records/:id/scores` and `POST /api/v1/records/:id/export` `{ "format": "json" }`. The JSON bundle is stored in Redis (`kkd:record-export:<jobId>`) when `REDIS_URL` is set, with a process-memory fallback. The worker regenerates the same bundle and rewrites the Redis key.
 8. Repeat as a second user: the first record must 404.
+9. Browser demo (APP_ENV=local): voice summary → select facts → Save → `/profile/history` → `/settings/privacy` export/delete. The web client sends `x-kkd-user-id` from a local demo UUID.
 
 There is no `/diagnosis-score` route.
 
@@ -34,8 +37,8 @@ Apply `supabase/migrations/20260902120000_health_records.sql` on the staging/pro
 | Source session id | raw ephemeral id | SHA-256 hash only, optional | Same as the entry |
 | Raw clinic transcript | — | **Not stored** | — |
 | System score | process components + explanations | `score_snapshots` | Until the user deletes the record |
-| JSON export | record + entries + scores | Memory (or server cache), signed expiring path | `RECORD_EXPORT_TTL_SECONDS` |
-| Export/purge jobs | ids and format only | BullMQ `exports` / `purges` | Job retention of the worker |
+| JSON export | record + entries + scores | Redis key `kkd:record-export:<jobId>` when Redis is up; otherwise API process memory | `RECORD_EXPORT_TTL_SECONDS` |
+| Export/purge jobs | ids and format only | BullMQ `exports` / `purges` | Job retention of the worker. Purge verifies dependent rows are gone; it does not invent a delayed-erasure window. |
 
 Logs emit event name, status, urgency class, and algorithm version. They must not include patient wording, facts, or export JSON.
 
@@ -48,11 +51,15 @@ Logs emit event name, status, urgency class, and algorithm version. They must no
 | Wrong consent version | `409 consent_version_mismatch`. |
 | Cross-user access | `404 record_not_found` (no existence leak). |
 | Supabase down in staging/production | `503 persistence_unavailable`. Do not fall back to memory (split-brain). |
-| Redis/BullMQ down | Export still completes in-process. Job enqueue is skipped. |
+| Redis/BullMQ down | Export still completes in API memory. Job enqueue is skipped. Download works on that API process only. |
 | PDF export | `400 pdf_export_not_available`. JSON only in this ticket. |
 | Feature flag off | `404 health_records_disabled`. |
 
-I do **not** know an approved numeric retention policy beyond “delete dependents when the user deletes.” The purge job verifies the request; it does not invent a delayed-erasure window.
+I do **not** know an approved numeric retention policy beyond “delete dependents when the user deletes.” The purge worker counts remaining rows for that `recordId` and fails the job if any remain. It does not invent a delayed-erasure window.
+
+Draft urgency rules are **not clinically reviewed**. Score create opts into `executeUnreviewedDraftRules` so the engine can return a class other than `unknown` before Antonia marks rules `active`.
+
+Live RLS DML: `RUN_SUPABASE_RLS=1 pnpm --filter @kkd/api test src/modules/records/records.rls.live.test.ts`. Requires `SUPABASE_URL`, publishable key, and `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`. Creates two disposable Auth users and deletes them afterwards.
 
 ## Staging validation
 

@@ -66,8 +66,8 @@ voiceRouter.get("/disclosure", (req, res) => {
       channel: "voice",
       requiresAcknowledgement: true,
       text: sw
-        ? "Mazungumzo haya yanatumia AI. KKD haitoi utambuzi wa ugonjwa. Inakusaidia kueleza dalili kabla ya kuongea na mtaalamu wa afya. Usitegemee zana hii wakati wa dharura. Simu hii ni ya kukusanya ukweli; si daktari."
-        : "This conversation uses AI. KKD does not diagnose. It helps you describe symptoms before you speak to a healthcare professional. Do not rely on it in an emergency. This call collects facts; it is not a doctor.",
+        ? "Mazungumzo haya yanatumia AI. KKD haitoi utambuzi wa ugonjwa. Inakusaidia kueleza dalili kabla ya kuongea na mtaalamu wa afya. Usitegemee zana hii wakati wa dharura. Simu hii ni ya kukusanya ukweli; si daktari. Mahojiano haya ni ya muda isipokuwa baadaye uchague kuhifadhi ukweli uliochaguliwa kwenye rekodi yako ya afya."
+        : "This conversation uses AI. KKD does not diagnose. It helps you describe symptoms before you speak to a healthcare professional. Do not rely on it in an emergency. This call collects facts; it is not a doctor. This interview is temporary unless you later choose to save selected facts to your health record.",
     }),
   );
 });
