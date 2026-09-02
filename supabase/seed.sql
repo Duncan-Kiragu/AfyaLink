@@ -1,0 +1,2 @@
+-- Persistent tables are owned by feature workstreams.
+-- Anonymous clinic transcripts must never be written here.

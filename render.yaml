@@ -1,0 +1,31 @@
+# Staging/production service names from the spec. Credentials stay in Render.
+# Fill build/start commands after KKD-BOOT-001 wires real deploys.
+
+services:
+  - type: web
+    name: kkd-web-stage
+    runtime: static
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/web build
+    staticPublishPath: ./apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  - type: web
+    name: kkd-api-stage
+    runtime: node
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/api build
+    startCommand: pnpm --filter @kkd/api start
+
+  - type: worker
+    name: kkd-worker-stage
+    runtime: node
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/worker build
+    startCommand: pnpm --filter @kkd/worker start
+
+  - type: web
+    name: kkd-mcp-stage
+    runtime: node
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/mcp build
+    startCommand: pnpm --filter @kkd/mcp start

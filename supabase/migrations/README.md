@@ -1,0 +1,5 @@
+-- Migrations are source-controlled. Do not edit production by hand.
+-- Suggested first tables (spec §4.D / §6.2): profiles, consents,
+-- health_records, health_record_entries, score_snapshots,
+-- health_profile_settings, follow_up_schedules, provider_directory,
+-- provider_specialties, ai_disclosure_versions, integration_configs.

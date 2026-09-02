@@ -1,0 +1,2 @@
+-- Example RLS tests live here (KKD-RECORDS-001 / bootstrap).
+-- Prove User A cannot read User B rows before merging persistence.

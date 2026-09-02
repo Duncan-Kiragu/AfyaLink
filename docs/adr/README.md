@@ -1,0 +1,3 @@
+# Architecture decision records
+
+Add one markdown file per decision, numbered ADR-001, ADR-002, …

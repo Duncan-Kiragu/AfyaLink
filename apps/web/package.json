@@ -1,0 +1,41 @@
+{
+  "name": "@kkd/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "catalog:",
+    "@kkd/api-client": "workspace:*",
+    "@kkd/contracts": "workspace:*",
+    "@kkd/i18n": "workspace:*",
+    "@kkd/ui": "workspace:*",
+    "@sentry/react": "catalog:",
+    "@tanstack/react-query": "catalog:",
+    "i18next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-hook-form": "catalog:",
+    "react-i18next": "catalog:",
+    "react-router": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}

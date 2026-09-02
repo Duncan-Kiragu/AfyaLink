@@ -1,0 +1,32 @@
+{
+  "name": "@kkd/mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --noEmit",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests --config ../../vitest.package.config.ts"
+  },
+  "dependencies": {
+    "@kkd/config": "workspace:*",
+    "@kkd/contracts": "workspace:*",
+    "@kkd/observability": "workspace:*",
+    "@modelcontextprotocol/express": "catalog:",
+    "@modelcontextprotocol/node": "catalog:",
+    "@modelcontextprotocol/server": "catalog:",
+    "dotenv": "catalog:",
+    "express": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/express": "catalog:",
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

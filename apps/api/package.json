@@ -1,0 +1,43 @@
+{
+  "name": "@kkd/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --noEmit",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests --config ../../vitest.package.config.ts"
+  },
+  "dependencies": {
+    "@kkd/ai": "workspace:*",
+    "@kkd/api-client": "workspace:*",
+    "@kkd/clinical-safety": "workspace:*",
+    "@kkd/config": "workspace:*",
+    "@kkd/contracts": "workspace:*",
+    "@kkd/integrations": "workspace:*",
+    "@kkd/observability": "workspace:*",
+    "@kkd/pii": "workspace:*",
+    "@kkd/scoring": "workspace:*",
+    "@supabase/supabase-js": "catalog:",
+    "cors": "catalog:",
+    "dotenv": "catalog:",
+    "express": "catalog:",
+    "express-rate-limit": "catalog:",
+    "helmet": "catalog:",
+    "ioredis": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/cors": "catalog:",
+    "@types/express": "catalog:",
+    "@types/node": "catalog:",
+    "@types/supertest": "catalog:",
+    "supertest": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
