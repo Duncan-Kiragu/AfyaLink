@@ -18,6 +18,25 @@ export {
 } from "./conditions.js";
 
 export {
+  complaintPathwaySchema,
+  requiredFieldEstablishmentSchema,
+  requiredFieldSchema,
+  symptomAttributeSchema,
+  REQUIRED_FIELD_ID_PATTERN,
+  type ComplaintPathway,
+  type RequiredField,
+  type RequiredFieldEstablishment,
+  type SymptomAttribute,
+} from "./pathway-schema.js";
+
+export {
+  activePathways,
+  isFieldEstablished,
+  missingCriticalFields,
+  type MissingCriticalField,
+} from "./pathways.js";
+
+export {
   defaultRuleSetRegistry,
   defineRuleSet,
   redFlagsRuleSet,
@@ -30,6 +49,8 @@ export {
 export {
   DeterministicSafetyEngine,
   evaluateSeverity,
+  missingCriticalFieldsFor,
+  nextRequiredQuestion,
   type SafetyEngine,
   type SeverityEvaluationOptions,
 } from "./evaluator.js";

@@ -1,10 +1,16 @@
 import {
+  safetyAssessmentSchema,
   severityEvaluationInputSchema,
   type ReportedFact,
   type ReportedSymptom,
 } from "@kkd/contracts";
 import { describe, expect, it } from "vitest";
-import { DeterministicSafetyEngine, evaluateSeverity } from "./evaluator.js";
+import {
+  DeterministicSafetyEngine,
+  evaluateSeverity,
+  missingCriticalFieldsFor,
+  nextRequiredQuestion,
+} from "./evaluator.js";
 import {
   defineRuleSet,
   RuleSetRegistry,
@@ -33,6 +39,16 @@ function evaluate(
   const { facts = [], ruleSetVersion = RULE_SET } = extra;
   return evaluateSeverity(
     severityEvaluationInputSchema.parse({ symptoms, facts, ruleSetVersion }),
+    { executeUnreviewedDraftRules: true },
+  );
+}
+
+function missingFacts(
+  symptoms: readonly ReportedSymptom[],
+  facts: readonly ReportedFact[] = [],
+) {
+  return missingCriticalFieldsFor(
+    severityEvaluationInputSchema.parse({ symptoms, facts, ruleSetVersion: RULE_SET }),
     { executeUnreviewedDraftRules: true },
   );
 }
@@ -292,6 +308,14 @@ describe("unreviewed rules do not run by default", () => {
     expect(assessment.requiresHumanEscalation).toBe(false);
   });
 
+  it("runs no draft pathway either, and does not claim it screened anything", () => {
+    // An unreviewed table must not license "no urgent warning sign was identified".
+    const assessment = evaluateSeverity(draftInput);
+
+    expect(assessment.missingCriticalFacts).toEqual([]);
+    expect(assessment.unknownReason).toBe("no_pathway_matched");
+  });
+
   it("fires the same draft rule once the caller opts in explicitly", () => {
     const assessment = evaluateSeverity(draftInput, {
       executeUnreviewedDraftRules: true,
@@ -360,5 +384,200 @@ describe("unreviewed rules do not run by default", () => {
         draftInput,
       ).urgency,
     ).toBe("emergency");
+  });
+});
+
+/**
+ * Spec §8.3.B steps 4-5 and §8.3.C. `unknown` on its own conflates "we asked everything
+ * and found no red flag" with "we cannot tell, because critical information is missing".
+ * Only the first may ever be phrased as reassurance.
+ */
+describe("missing critical facts and the two kinds of unknown", () => {
+  const CHEST_PAIN_ONLY = [CHEST_PAIN];
+
+  /** Spec §8.6: "missing critical fact returns `unknown` or asks a required question". */
+  it("returns unknown and asks the required question when a critical fact is missing", () => {
+    const assessment = evaluate(CHEST_PAIN_ONLY);
+
+    expect(assessment.urgency).toBe("unknown");
+    expect(assessment.unknownReason).toBe("missing_critical_facts");
+    expect(assessment.missingCriticalFacts[0]).toBe("symptom.breathlessness");
+
+    const question = nextRequiredQuestion(
+      severityEvaluationInputSchema.parse({
+        symptoms: CHEST_PAIN_ONLY,
+        ruleSetVersion: RULE_SET,
+      }),
+      { executeUnreviewedDraftRules: true },
+    );
+    expect(question?.fieldId).toBe("symptom.breathlessness");
+    expect(question?.questionKey).toBe("severity.question.breathlessness");
+  });
+
+  it("asks critical discriminators before lower-value detail", () => {
+    expect(missingFacts(CHEST_PAIN_ONLY).map((field) => field.fieldId)).toEqual([
+      "symptom.breathlessness",
+      "symptom.chest_pain.severity",
+      "symptom.chest_pain.onset",
+      "symptom.chest_pain.duration",
+    ]);
+  });
+
+  it("distinguishes a screened pathway from an unanswered one", () => {
+    // Everything pathway.chest_pain requires is settled, and no rule fired.
+    const screened = evaluate([
+      symptom("chest_pain", {
+        severity: 3,
+        onset: "yesterday",
+        duration: "2 hours",
+        deniedSymptoms: ["breathlessness"],
+      }),
+    ]);
+
+    expect(screened.urgency).toBe("unknown");
+    expect(screened.unknownReason).toBe("screened_no_rule_matched");
+    expect(screened.missingCriticalFacts).toEqual([]);
+
+    // Same urgency, opposite meaning: nothing has been established yet.
+    expect(evaluate(CHEST_PAIN_ONLY).unknownReason).toBe("missing_critical_facts");
+  });
+
+  it("screens a fever pathway through its any_of measurement branch", () => {
+    const screened = evaluate(
+      [
+        symptom("fever", {
+          duration: "2 days",
+          deniedSymptoms: ["neck_stiffness"],
+        }),
+      ],
+      {
+        facts: [
+          fact("measurement.temperature_c.unavailable", true),
+          fact("exposure.recent_travel_risk_area", false),
+        ],
+      },
+    );
+
+    expect(screened.missingCriticalFacts).toEqual([]);
+    expect(screened.unknownReason).toBe("screened_no_rule_matched");
+  });
+
+  it("refuses to claim a screening it has no table for", () => {
+    const assessment = evaluate([MILD_HEADACHE]);
+
+    expect(assessment.urgency).toBe("unknown");
+    expect(assessment.unknownReason).toBe("no_pathway_matched");
+    expect(assessment.missingCriticalFacts).toEqual([]);
+  });
+
+  it("does not read silence as an answer", () => {
+    // Spec §5.2: "Never translate 'not mentioned' into 'denied'."
+    const unmentioned = evaluate(CHEST_PAIN_ONLY);
+    const denied = evaluate([
+      symptom("chest_pain", { deniedSymptoms: ["breathlessness"] }),
+    ]);
+
+    expect(unmentioned.missingCriticalFacts).toContain("symptom.breathlessness");
+    expect(unmentioned.unknownReason).toBe("missing_critical_facts");
+    expect(denied.missingCriticalFacts).not.toContain("symptom.breathlessness");
+  });
+
+  it("unions the required fields of every active pathway", () => {
+    const assessment = evaluate([CHEST_PAIN, symptom("abdominal_pain")]);
+
+    expect(assessment.missingCriticalFacts.slice(0, 2)).toEqual([
+      "symptom.abdominal_pain.severity",
+      "symptom.breathlessness",
+    ]);
+    expect(assessment.missingCriticalFacts).toContain("symptom.vomiting");
+  });
+
+  it("still reports what is missing once a red flag has fired", () => {
+    // Spec §8.3.B step 3 puts the safety message before further questioning; the engine
+    // still records what was never established, and claims no unknown reason.
+    const assessment = evaluate([CHEST_PAIN, BREATHLESSNESS]);
+
+    expect(assessment.urgency).toBe("emergency");
+    expect(assessment.unknownReason).toBeUndefined();
+    expect(assessment.missingCriticalFacts).toContain("symptom.chest_pain.severity");
+  });
+
+  it("has no unknown reason to give at any decided urgency", () => {
+    const assessment = evaluate([MEASURED_FEVER]);
+
+    expect(assessment.urgency).toBe("urgent_today");
+    expect(assessment.unknownReason).toBeUndefined();
+    expect(() => safetyAssessmentSchema.parse(assessment)).not.toThrow();
+  });
+
+  it("rejects an unknown reason attached to a decided urgency", () => {
+    expect(() =>
+      safetyAssessmentSchema.parse({
+        urgency: "emergency",
+        ruleIds: [],
+        explanationKeys: [],
+        missingCriticalFacts: [],
+        requiresHumanEscalation: false,
+        ruleSetVersion: RULE_SET,
+        unknownReason: "screened_no_rule_matched",
+      }),
+    ).toThrow();
+  });
+});
+
+/** Spec §8.6 determinism, extended to the fields Slice 3 adds. */
+describe("determinism of missing critical facts", () => {
+  const symptoms = [CHEST_PAIN, symptom("abdominal_pain"), MILD_HEADACHE];
+
+  it("returns the same missing facts in the same order for repeated evaluation", () => {
+    const first = evaluate(symptoms);
+
+    for (let run = 0; run < 50; run += 1) {
+      expect(evaluate(symptoms).missingCriticalFacts).toEqual(first.missingCriticalFacts);
+    }
+  });
+
+  it("does not depend on the order the symptoms were reported in", () => {
+    const expected = evaluate(symptoms);
+
+    for (const permutation of permutations(symptoms)) {
+      expect(evaluate(permutation)).toEqual(expected);
+    }
+  });
+
+  it("produces an assessment that satisfies the published contract", () => {
+    for (const input of [[CHEST_PAIN], [CHEST_PAIN, BREATHLESSNESS], [MILD_HEADACHE]]) {
+      expect(() => safetyAssessmentSchema.parse(evaluate(input))).not.toThrow();
+    }
+  });
+
+  it("pins the missing-fact tables to the same rule set version as the rules", () => {
+    const registry = new RuleSetRegistry([
+      defineRuleSet("no-pathways@0.0.1", [
+        {
+          id: "test.chest_pain",
+          version: "0.0.1",
+          status: "draft",
+          requiredInputs: ["symptom.chest_pain"],
+          conditions: [{ kind: "symptom_reported", concept: "chest_pain" }],
+          urgencyResult: "soon",
+          patientMessageKey: "severity.explanation.test_chest_pain",
+          requiresHumanEscalation: false,
+        },
+      ]),
+    ]);
+
+    const input = severityEvaluationInputSchema.parse({
+      symptoms: [CHEST_PAIN],
+      ruleSetVersion: "no-pathways@0.0.1",
+    });
+
+    // A rule set that ships no pathway tables asks nothing, and the shipped one is
+    // unaffected by it.
+    expect(
+      evaluateSeverity(input, { registry, executeUnreviewedDraftRules: true })
+        .missingCriticalFacts,
+    ).toEqual([]);
+    expect(evaluate([CHEST_PAIN]).missingCriticalFacts.length).toBeGreaterThan(0);
   });
 });
