@@ -9,6 +9,7 @@ const deployedBase = {
   REDIS_URL: "redis://localhost:6379",
   ANTHROPIC_API_KEY: "key",
   ANTHROPIC_MODEL: "claude-model",
+  PRESIDIO_ANALYZER_URL: "http://127.0.0.1:5002",
 } as const;
 
 describe("FEATURE_SEVERITY_UNREVIEWED_DRAFT_RULES", () => {
