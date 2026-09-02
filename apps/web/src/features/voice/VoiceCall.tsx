@@ -207,7 +207,7 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
 
   return (
     <main>
-      <p>
+      <p className="voice-kicker">
         <Link to="/">{t("voice.home")}</Link>
       </p>
       <h1>{t("voice.title")}</h1>
@@ -234,28 +234,32 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
       {status === "error" && message ? <p role="alert">{message}</p> : null}
 
       {phase === "idle" ? (
-        <section>
+        <section className="voice-card">
           <h2>{t("disclosure.title")}</h2>
           <p>{disclosure.text}</p>
-          <button type="button" onClick={() => void onAcknowledge()}>
-            {t("disclosure.acknowledge")}
-          </button>
+          <div className="voice-actions">
+            <button className="voice-btn voice-btn-primary" type="button" onClick={() => void onAcknowledge()}>
+              {t("disclosure.acknowledge")}
+            </button>
+          </div>
         </section>
       ) : null}
 
       {phase === "disclosed" ? (
         <section className="voice-handset">
+          <p className="voice-kicker">{t("voice.recordingOff")}</p>
           <p>{t("voice.mockHandset")}</p>
-          <p>{t("voice.recordingOff")}</p>
-          <button type="button" onClick={() => void onStartCall()}>
-            {t("voice.startCall")}
-          </button>
+          <div className="voice-actions">
+            <button className="voice-btn voice-btn-primary" type="button" onClick={() => void onStartCall()}>
+              {t("voice.startCall")}
+            </button>
+          </div>
         </section>
       ) : null}
 
       {phase === "live" ? (
         <section className="voice-handset">
-          <p>
+          <p className="voice-kicker">
             {t("voice.callStatus")}:{" "}
             {transport === "elevenlabs_webrtc" ? t("voice.transport.live") : t("voice.transport.mock")}
             {transport === "elevenlabs_webrtc" ? ` (${status})` : null}
@@ -267,52 +271,58 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
               {t("voice.yourAnswer")}
               <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} />
             </label>
-            <button type="submit">{t("voice.sendAnswer")}</button>
+            <div className="voice-actions">
+              <button className="voice-btn voice-btn-primary" type="submit">
+                {t("voice.sendAnswer")}
+              </button>
+              <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onShowSummary()}>
+                {t("voice.endAndSummary")}
+              </button>
+            </div>
           </form>
-          <button type="button" onClick={() => void onShowSummary()}>
-            {t("voice.endAndSummary")}
-          </button>
         </section>
       ) : null}
 
       {phase === "summary" && summary ? (
-        <section>
-          <h2>{t("voice.summaryTitle")}</h2>
-          <p>{summary.reasonForSeekingCare}</p>
+        <section className="voice-card">
+          <p className="voice-kicker">{t("voice.summaryTitle")}</p>
+          <h2>{summary.reasonForSeekingCare}</h2>
           <ul>
             {summary.symptomsReported.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
           <p>{summary.recommendedNextAction}</p>
-          <p>
-            <Link to="/care-near-me">{t("voice.sendToHospital")}</Link>
-          </p>
+          <div className="voice-actions">
+            <Link className="voice-btn voice-btn-accent" to="/care-near-me">
+              {t("voice.sendToHospital")}
+            </Link>
+          </div>
           <p>{t("voice.locationHint")}</p>
           <label>
             {t("voice.smsPhone")}
             <input value={phone} onChange={(event) => setPhone(event.target.value)} />
           </label>
-          <button type="button" onClick={() => void onSms()}>
-            {t("voice.sendSms")}
-          </button>
-          {smsNote ? <p>{smsNote}</p> : null}
-          {sessionId ? (
-            <>
-              <button type="button" onClick={() => void onCallback()}>
+          <div className="voice-actions">
+            <button className="voice-btn voice-btn-primary" type="button" onClick={() => void onSms()}>
+              {t("voice.sendSms")}
+            </button>
+            {sessionId ? (
+              <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onCallback()}>
                 {t("voice.continueLater")}
               </button>
-              {callbackRequested ? (
-                <button type="button" onClick={() => void onCancelCallback()}>
-                  {t("voice.cancelCallback")}
-                </button>
-              ) : null}
-            </>
-          ) : null}
+            ) : null}
+            {callbackRequested ? (
+              <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onCancelCallback()}>
+                {t("voice.cancelCallback")}
+              </button>
+            ) : null}
+            <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onHangUp()}>
+              {t("voice.done")}
+            </button>
+          </div>
+          {smsNote ? <p>{smsNote}</p> : null}
           {callbackNote ? <p>{callbackNote}</p> : null}
-          <button type="button" onClick={() => void onHangUp()}>
-            {t("voice.done")}
-          </button>
         </section>
       ) : null}
     </main>

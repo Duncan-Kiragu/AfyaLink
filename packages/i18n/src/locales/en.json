@@ -6,6 +6,7 @@
   "consent.saveRecord": "Save selected facts to my health record",
   "privacy.settings": "Privacy settings",
   "error.retry": "Something went wrong. Please try again.",
+  "voice.notADiagnosis": "NOT A DIAGNOSIS — this is a triage aid. A licensed clinician confirms everything.",
   "voice.title": "Voice interview",
   "voice.subtitle": "Describe what you are experiencing. This is not a doctor and it does not diagnose.",
   "voice.home": "Home",
