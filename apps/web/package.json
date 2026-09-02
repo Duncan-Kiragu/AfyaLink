@@ -14,6 +14,7 @@
   "dependencies": {
     "@hookform/resolvers": "catalog:",
     "@kkd/api-client": "workspace:*",
+    "@kkd/clinical-safety": "workspace:*",
     "@kkd/contracts": "workspace:*",
     "@kkd/i18n": "workspace:*",
     "@kkd/ui": "workspace:*",

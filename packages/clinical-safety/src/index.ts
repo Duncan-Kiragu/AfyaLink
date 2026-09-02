@@ -1,6 +1,9 @@
 import type { SafetyAssessment } from "@kkd/contracts";
 import { z } from "zod";
 
+// Care-category routing (workstream 5)
+export { routeToCareCategory, type CareRoutingInput } from "./care-routing.js";
+
 export const safetyRuleSchema = z.object({
   id: z.string(),
   version: z.string(),

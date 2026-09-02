@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { urgencyClassSchema } from "./safety.js";
 
 export const dataClassificationSchema = z.enum([
   "public",
@@ -38,10 +39,10 @@ export type CareCategory = z.infer<typeof careCategorySchema>;
 
 export const providerSearchInputSchema = z.object({
   careCategory: careCategorySchema,
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
   areaQuery: z.string().optional(),
-  urgency: z.string().optional(),
+  urgency: urgencyClassSchema.optional(),
 });
 export type ProviderSearchInput = z.infer<typeof providerSearchInputSchema>;
 

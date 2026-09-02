@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { careCategorySchema } from "./integrations.js";
 
 export const QUEUE_NAMES = [
   "followups",
@@ -19,3 +20,14 @@ export const jobEnvelopeSchema = z.object({
   payload: z.unknown(),
 });
 export type JobEnvelope = z.infer<typeof jobEnvelopeSchema>;
+
+export const providerSyncPayloadSchema = z.object({
+  careCategories: z.array(careCategorySchema).optional(),
+  // Coordinates are optional: a sync may target an area by name alone.
+  locations: z.array(z.object({
+    name: z.string(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+  })).optional(),
+});
+export type ProviderSyncPayload = z.infer<typeof providerSyncPayloadSchema>;

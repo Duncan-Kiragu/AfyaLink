@@ -5,6 +5,7 @@ export * from "./common.js";
 export * from "./disclosure.js";
 export * from "./integrations.js";
 export * from "./jobs.js";
+export * from "./location.js";
 export * from "./mcp.js";
 export * from "./pii.js";
 export * from "./records.js";
