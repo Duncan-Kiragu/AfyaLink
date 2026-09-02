@@ -37,6 +37,8 @@ const baseSchema = z.object({
   VOICE_PHONE_NUMBER_ID: z.string().optional(),
   TWILIO_ACCOUNT_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
+  RECORD_EXPORT_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+  RECORD_EXPORT_SIGNING_SECRET: z.string().optional(),
   FEATURE_HEALTH_RECORDS: featureFlagSchema,
   FEATURE_HEALTH_PROFILE: featureFlagSchema,
   FEATURE_WHATSAPP: featureFlagSchema,
@@ -66,6 +68,13 @@ export const envSchema = baseSchema.superRefine((env, ctx) => {
         message: `${key} is required when APP_ENV is ${env.APP_ENV}`,
       });
     }
+  }
+  if (env.FEATURE_HEALTH_RECORDS && !env.RECORD_EXPORT_SIGNING_SECRET) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["RECORD_EXPORT_SIGNING_SECRET"],
+      message: "RECORD_EXPORT_SIGNING_SECRET is required when FEATURE_HEALTH_RECORDS is true and APP_ENV is not local",
+    });
   }
 });
 

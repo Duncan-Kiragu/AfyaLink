@@ -8,7 +8,7 @@ Scaffolding only. Implement behavior in the owning workstream; do not add a seco
 | --- | --- | --- |
 | Repo bootstrap, `apps/api`, `apps/worker`, `packages/{config,observability,ai,integrations}` | Evans | KKD-BOOT-001 |
 | `packages/pii` | Evans | KKD-PII-001 |
-| `packages/scoring`, `apps/api/src/modules/records`, `supabase` record tables | Duncan | KKD-RECORDS-001 |
+| `packages/scoring`, `apps/api/src/modules/records`, `supabase` record tables | Duncan | KKD-RECORDS-001 — see `docs/runbooks/records.md` |
 | `packages/clinical-safety`, profiling | Antonia | KKD-SAFETY-001 |
 | `apps/api/src/modules/{location,providers}`, geo adapters | Hassan | KKD-CARE-001 |
 | `apps/web`, `packages/ui`, `packages/i18n` | Brian | KKD-WEB-001 |

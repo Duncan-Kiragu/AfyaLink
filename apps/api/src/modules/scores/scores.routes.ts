@@ -1,5 +1,10 @@
 import { Router } from "express";
-import { notImplementedHandler } from "../../lib/not-implemented.js";
 
 export const scoresRouter = Router();
-scoresRouter.get("/", notImplementedHandler("GET /api/v1/scores"));
+
+scoresRouter.get("/", (_req, res) => {
+  res.status(404).json({
+    error: "use_record_scores",
+    path: "/api/v1/records/:id/scores",
+  });
+});
