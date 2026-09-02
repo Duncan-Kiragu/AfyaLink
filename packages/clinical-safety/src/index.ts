@@ -1,29 +1,35 @@
-import type { SafetyAssessment } from "@kkd/contracts";
-import { z } from "zod";
+export {
+  EXECUTABLE_RULE_STATUSES,
+  safetyRuleConditionSchema,
+  safetyRuleSchema,
+  safetyRuleStatusSchema,
+  type SafetyRule,
+  type SafetyRuleCondition,
+  type SafetyRuleStatus,
+} from "./rule-schema.js";
 
-export const safetyRuleSchema = z.object({
-  id: z.string(),
-  version: z.string(),
-  status: z.enum(["draft", "active", "retired"]),
-  requiredInputs: z.array(z.string()),
-  urgencyResult: z.string(),
-  patientMessageKey: z.string(),
-  clinicalRationale: z.string().optional(),
-  reviewedBy: z.string().optional(),
-  reviewedAt: z.string().optional(),
-});
-export type SafetyRule = z.infer<typeof safetyRuleSchema>;
+export { evaluateCondition, normalizeConcept } from "./conditions.js";
 
+export {
+  defaultRuleSetRegistry,
+  defineRuleSet,
+  redFlagsRuleSet,
+  RED_FLAGS_V0_1_0_DRAFT_VERSION,
+  RuleSetRegistry,
+  UnknownRuleSetVersionError,
+  type RuleSet,
+} from "./registry.js";
+
+export {
+  DeterministicSafetyEngine,
+  evaluateSeverity,
+  type SafetyEngine,
+} from "./evaluator.js";
+
+/**
+ * Post-generation guard over patient-facing model output (spec §14).
+ * Implementation is Slice 4; ownership is still open (spec §10.4.D says "Evans/Antonia").
+ */
 export interface DiagnosisLanguageGuard {
   inspect(text: string, locale: string): Promise<{ allowed: boolean; reason?: string }>;
-}
-
-export interface SafetyEngine {
-  evaluate(session: unknown): Promise<SafetyAssessment>;
-}
-
-export class UnimplementedSafetyEngine implements SafetyEngine {
-  evaluate(_session: unknown): Promise<SafetyAssessment> {
-    return Promise.reject(new Error("@kkd/clinical-safety evaluate is not implemented"));
-  }
 }
