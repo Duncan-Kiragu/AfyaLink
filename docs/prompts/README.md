@@ -10,3 +10,4 @@ Prompt IDs and versions for `@kkd/ai`. Route handlers must not embed prompts.
 | `kkd.normalize_language` | 1.0.0 | `normalizeLanguage` |
 
 Source: `packages/ai/src/prompts/`.
+ElevenLabs agent instructions for KKD-VOICE-001: [voice-agent.md](./voice-agent.md).

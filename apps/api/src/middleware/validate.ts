@@ -8,6 +8,7 @@ export function validate(schema: ZodType, source: "body" | "query" | "params" = 
       next(parsed.error);
       return;
     }
+    req[source] = parsed.data as never;
     next();
   };
 }

@@ -8,7 +8,7 @@ Scaffolding only. Implement behavior in the owning workstream; do not add a seco
 | --- | --- | --- |
 | Repo bootstrap, `apps/api`, `apps/worker`, `packages/{config,observability,ai,integrations}` | Evans | KKD-BOOT-001 |
 | `packages/pii` | Evans | KKD-PII-001 |
-| `packages/scoring`, `apps/api/src/modules/records`, `supabase` record tables | Duncan | KKD-RECORDS-001 |
+| `packages/scoring`, `apps/api/src/modules/records`, `supabase` record tables | Duncan | KKD-RECORDS-001 — see `docs/runbooks/records.md` |
 | `packages/clinical-safety`, profiling | Antonia | KKD-SAFETY-001 |
 | `apps/api/src/modules/{location,providers}`, geo adapters | Hassan | KKD-CARE-001 |
 | `apps/web`, `packages/ui`, `packages/i18n` | Brian | KKD-WEB-001 |
@@ -32,7 +32,7 @@ Scaffolding only. Implement behavior in the owning workstream; do not add a seco
 ```
 src/app/          providers, router, error boundary
 src/routes/       one file per URL from the spec
-src/features/     product slices (disclosure, conversation, summary, …)
+src/features/     product slices (disclosure, conversation, summary, voice, …)
 src/components/   presentational only
 src/i18n/         web wiring; strings live in @kkd/i18n
 src/api/          wraps @kkd/api-client
