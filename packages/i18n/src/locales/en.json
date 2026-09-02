@@ -1,0 +1,9 @@
+{
+  "disclosure.title": "This conversation uses AI",
+  "disclosure.body": "KKD does not diagnose. It helps you describe symptoms before you speak to a healthcare professional. Do not rely on it in an emergency.",
+  "disclosure.acknowledge": "I understand",
+  "urgency.emergency": "Seek emergency care now",
+  "consent.saveRecord": "Save selected facts to my health record",
+  "privacy.settings": "Privacy settings",
+  "error.retry": "Something went wrong. Please try again."
+}
