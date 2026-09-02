@@ -1,6 +1,7 @@
 -- RLS isolation for KKD-RECORDS-001.
 -- Run with `supabase test db` after applying 20260902120000_health_records.sql.
--- Cross-user DML is also covered by apps/api records HTTP tests (always-on).
+-- Cross-user DML is covered by apps/api records HTTP tests (always-on) and
+-- `records.rls.live.test.ts` (set RUN_SUPABASE_RLS=1 against a real project).
 
 BEGIN;
 

@@ -1,6 +1,6 @@
 {
   "disclosure.title": "This conversation uses AI",
-  "disclosure.body": "KKD does not diagnose. It helps you describe symptoms before you speak to a healthcare professional. Do not rely on it in an emergency.",
+  "disclosure.body": "KKD does not diagnose. It helps you describe symptoms before you speak to a healthcare professional. Do not rely on it in an emergency. This interview is temporary unless you later choose to save selected facts to your health record.",
   "disclosure.acknowledge": "I understand",
   "urgency.emergency": "Seek emergency care now",
   "consent.saveRecord": "Save selected facts to my health record",
@@ -35,5 +35,24 @@
   "voice.transport.mock": "Mock call (typed answers)",
   "voice.urgency.highIntensity": "Reported intensity is high. Seek care today.",
   "voice.urgency.needMore": "More detail is needed before an urgency class other than unknown can be given.",
-  "voice.urgency.soon": "No emergency warning sign was identified from the facts collected so far."
+  "voice.urgency.soon": "No emergency warning sign was identified from the facts collected so far.",
+  "records.selectFacts": "Choose which reported facts to save. The raw conversation is not stored.",
+  "records.saving": "Saving selected facts…",
+  "records.saved": "Selected facts were saved to your health record.",
+  "records.viewHistory": "View history and scores",
+  "records.needSelection": "Select at least one fact to save.",
+  "history.title": "Health record history",
+  "history.empty": "No saved facts yet. Save selected facts after a voice interview.",
+  "history.entries": "Saved facts",
+  "history.scores": "Score snapshot",
+  "history.notADiagnosis": "These numbers are process scores, not a condition label.",
+  "privacy.exportJson": "Export my record as JSON",
+  "privacy.exported": "Export ready. Download started.",
+  "privacy.deleteRecord": "Delete this record",
+  "privacy.deleteAll": "Delete all my records",
+  "privacy.deleteConfirm": "Delete this record and its scores? This cannot be undone from the app.",
+  "privacy.deleteAllConfirm": "Delete every record on this demo account?",
+  "privacy.deleted": "Record deleted.",
+  "privacy.noRecords": "There is nothing to export or delete yet.",
+  "privacy.consentNote": "Saving facts requires an explicit consent grant. Export and delete still work after consent is withdrawn."
 }

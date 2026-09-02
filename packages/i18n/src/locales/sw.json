@@ -1,6 +1,6 @@
 {
   "disclosure.title": "Mazungumzo haya yanatumia AI",
-  "disclosure.body": "KKD haitoi utambuzi wa ugonjwa. Inakusaidia kueleza dalili kabla ya kuongea na mtaalamu wa afya. Usitegemee zana hii wakati wa dharura.",
+  "disclosure.body": "KKD haitoi utambuzi wa ugonjwa. Inakusaidia kueleza dalili kabla ya kuongea na mtaalamu wa afya. Usitegemee zana hii wakati wa dharura. Mahojiano haya ni ya muda isipokuwa baadaye uchague kuhifadhi ukweli uliochaguliwa kwenye rekodi yako ya afya.",
   "disclosure.acknowledge": "Nimeelewa",
   "urgency.emergency": "Tafuta huduma ya dharura sasa",
   "consent.saveRecord": "Hifadhi ukweli uliochaguliwa kwenye rekodi yangu ya afya",
@@ -35,5 +35,24 @@
   "voice.transport.mock": "Simu bandia (majibu ya kuandika)",
   "voice.urgency.highIntensity": "Kiwango ulichoripoti ni kikubwa. Tafuta huduma leo.",
   "voice.urgency.needMore": "Tunahitaji maelezo zaidi kabla ya kutoa daraja la dharura isipokuwa 'haijulikani'.",
-  "voice.urgency.soon": "Hakuna ishara ya dharura iliyotambuliwa kutokana na ukweli uliokusanywa hadi sasa."
+  "voice.urgency.soon": "Hakuna ishara ya dharura iliyotambuliwa kutokana na ukweli uliokusanywa hadi sasa.",
+  "records.selectFacts": "Chagua ukweli wa kuhifadhi. Mazungumzo yote hayahifadhiwi.",
+  "records.saving": "Inahifadhi ukweli uliochaguliwa…",
+  "records.saved": "Ukweli uliochaguliwa umehifadhiwa kwenye rekodi yako ya afya.",
+  "records.viewHistory": "Angalia historia na alama",
+  "records.needSelection": "Chagua angalau ukweli mmoja wa kuhifadhi.",
+  "history.title": "Historia ya rekodi ya afya",
+  "history.empty": "Bado hakuna ukweli uliohifadhiwa. Hifadhi ukweli baada ya mahojiano ya sauti.",
+  "history.entries": "Ukweli uliohifadhiwa",
+  "history.scores": "Picha ya alama",
+  "history.notADiagnosis": "Namba hizi ni alama za mchakato, si jina la ugonjwa.",
+  "privacy.exportJson": "Hamisha rekodi yangu kama JSON",
+  "privacy.exported": "Hamisho limeandaliwa. Upakuaji umeanza.",
+  "privacy.deleteRecord": "Futa rekodi hii",
+  "privacy.deleteAll": "Futa rekodi zangu zote",
+  "privacy.deleteConfirm": "Ungependa kufuta rekodi hii na alama zake? Haiwezi kurudishwa kutoka kwenye programu.",
+  "privacy.deleteAllConfirm": "Ungependa kufuta kila rekodi kwenye akaunti hii ya majaribio?",
+  "privacy.deleted": "Rekodi imefutwa.",
+  "privacy.noRecords": "Hakuna cha kuhamisha au kufuta bado.",
+  "privacy.consentNote": "Kuhifadhi ukweli kunahitaji ridhaa ya wazi. Hamisho na kufuta bado vinafanya kazi baada ya ridhaa kuondolewa."
 }

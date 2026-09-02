@@ -114,6 +114,15 @@ export const persistFactsResultSchema = z.object({
 });
 export type PersistFactsResult = z.infer<typeof persistFactsResultSchema>;
 
+export const persistFromVoiceInputSchema = z
+  .object({
+    consentVersion: z.string().min(1),
+    sessionId: z.string().uuid(),
+    selectedFactIds: z.array(z.string().min(1)).min(1).max(50),
+  })
+  .strict();
+export type PersistFromVoiceInput = z.infer<typeof persistFromVoiceInputSchema>;
+
 export const grantConsentInputSchema = z
   .object({
     version: z.string().min(1),

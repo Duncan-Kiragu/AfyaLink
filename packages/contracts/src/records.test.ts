@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { persistFactsInputSchema } from "./records.js";
+import { persistFactsInputSchema, persistFromVoiceInputSchema } from "./records.js";
 
 describe("persistFactsInputSchema", () => {
   const fact = {
@@ -27,6 +27,21 @@ describe("persistFactsInputSchema", () => {
         sourceChannel: "web",
         facts: [fact],
         transcript: "Patient: I have malaria. Agent: What are you feeling?",
+      }),
+    ).toThrow();
+  });
+
+  it("requires an explicit selected-fact list for persist-from-voice", () => {
+    const parsed = persistFromVoiceInputSchema.parse({
+      consentVersion: "records.persist.v1",
+      sessionId: "11111111-1111-4111-8111-111111111111",
+      selectedFactIds: ["sym-1"],
+    });
+    expect(parsed.selectedFactIds).toEqual(["sym-1"]);
+    expect(() =>
+      persistFromVoiceInputSchema.parse({
+        consentVersion: "records.persist.v1",
+        sessionId: "11111111-1111-4111-8111-111111111111",
       }),
     ).toThrow();
   });

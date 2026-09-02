@@ -64,7 +64,8 @@ export type ScoreComputationInput = z.infer<typeof scoreComputationInputSchema>;
 
 export const computeScoreInputSchema = z
   .object({
-    urgencyClass: urgencyClassSchema,
+    /** Ignored when present. Urgency is computed by the safety/severity engine. */
+    urgencyClass: urgencyClassSchema.optional(),
     requiredFieldIds: z.array(z.string().min(1)).optional(),
     answeredFieldIds: z.array(z.string().min(1)).optional(),
     inferredFieldIds: z.array(z.string().min(1)).optional(),

@@ -24,4 +24,5 @@ export const redisKeyPrefixes = {
   cache: (provider: string, key: string) => `kkd:cache:${provider}:${key}`,
   lock: (resource: string) => `kkd:lock:${resource}`,
   bull: (queue: string) => `kkd:bull:${queue}`,
+  recordExport: (jobId: string) => `kkd:record-export:${jobId}`,
 } as const;

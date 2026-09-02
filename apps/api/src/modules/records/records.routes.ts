@@ -8,6 +8,7 @@ import {
   healthRecordListSchema,
   persistFactsInputSchema,
   persistFactsResultSchema,
+  persistFromVoiceInputSchema,
   recordEntryInputSchema,
   recordEntryListSchema,
   recordExportBundleSchema,
@@ -33,6 +34,7 @@ import {
   listEntries,
   listRecords,
   listScores,
+  persistFactsFromVoiceSession,
   persistSelectedFacts,
   readExport,
   withdrawConsent,
@@ -184,6 +186,22 @@ recordsRouter.post(
       const params = recordIdParamsSchema.parse(req.params);
       const body = persistFactsInputSchema.parse(req.body);
       const result = await persistSelectedFacts(userId(req), params.id, body);
+      res.status(201).json(persistFactsResultSchema.parse(result));
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+recordsRouter.post(
+  "/:id/persist-from-voice",
+  validate(recordIdParamsSchema, "params"),
+  validate(persistFromVoiceInputSchema),
+  async (req, res, next) => {
+    try {
+      const params = recordIdParamsSchema.parse(req.params);
+      const body = persistFromVoiceInputSchema.parse(req.body);
+      const result = await persistFactsFromVoiceSession(userId(req), params.id, body);
       res.status(201).json(persistFactsResultSchema.parse(result));
     } catch (error) {
       next(error);

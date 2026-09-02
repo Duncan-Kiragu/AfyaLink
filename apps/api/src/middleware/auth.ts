@@ -16,7 +16,8 @@ function bearerToken(req: Request): string | undefined {
 
 export async function resolveAuth(req: Request): Promise<{ userId: string } | undefined> {
   const env = loadEnv();
-  const allowDevHeader = env.NODE_ENV === "test" || env.APP_ENV === "local";
+  const allowDevHeader =
+    env.NODE_ENV === "test" || env.NODE_ENV === "development" || env.APP_ENV === "local";
   if (allowDevHeader) {
     const testUser = req.header("x-kkd-user-id");
     if (testUser && UUID_RE.test(testUser)) {
