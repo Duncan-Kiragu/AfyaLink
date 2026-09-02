@@ -9,6 +9,10 @@ Browser ElevenLabs Conversational AI plus a mocked handset. Twilio/SIP are not u
 3. Paste those two values when you want a live WebRTC session. The API key never leaves the API process; the browser only receives a short-lived conversation token.
 4. `pnpm dev`, open `/voice`, acknowledge disclosure, start the mock call, submit two answers, show the factual summary.
 
+Visual reference: `docs/design/symptom-assessment.dc.html` (open in a browser). Voice uses that palette, type, and the sticky **NOT A DIAGNOSIS** banner. It does **not** implement the canvas “ranked likely causes” screens — those would be a diagnosis UI.
+
+Live ElevenLabs: follow `docs/prompts/voice-agent.md` (dashboard setup).
+
 ## Privacy
 
 - Call recording is off and is not configurable in this ticket.

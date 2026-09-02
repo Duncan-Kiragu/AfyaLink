@@ -14,6 +14,7 @@ export const safetyCriticalKeys = [
   "disclosure.body",
   "disclosure.acknowledge",
   "urgency.emergency",
+  "voice.notADiagnosis",
   "voice.sendToHospital",
   "voice.recordingOff",
   "consent.saveRecord",
