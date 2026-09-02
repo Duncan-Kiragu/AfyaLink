@@ -21,6 +21,7 @@ const baseSchema = z.object({
   REDIS_URL: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_MODEL: z.string().optional(),
+  PRESIDIO_ANALYZER_URL: z.string().optional(),
   EPHEMERAL_SESSION_TTL_SECONDS: z.coerce.number().int().positive().default(1800),
   SESSION_MAX_LIFETIME_SECONDS: z.coerce.number().int().positive().default(14400),
   SENTRY_DSN: z.string().optional(),
@@ -47,6 +48,21 @@ const baseSchema = z.object({
   FEATURE_USSD: featureFlagSchema,
   FEATURE_VOICE: featureFlagSchema,
   FEATURE_MCP: featureFlagSchema,
+  /**
+   * Execute clinically unreviewed `draft` safety rules and complaint pathways
+   * (spec §8.3.A). Off by default: with it off, only rules carrying a named clinical
+   * reviewer run, and the shipped `red-flags@0.1.0-draft` set has none — so every
+   * evaluation returns `unknown`.
+   *
+   * This is the single switch between the safe default and a working demo. It lives
+   * here rather than at the call site so that "are unreviewed clinical rules deciding
+   * what patients are told?" is answerable from configuration alone.
+   *
+   * Permitted in `local` and `staging` (the hackathon demo runs from staging). Refused
+   * in `production` by the `superRefine` below — config load fails rather than the
+   * request.
+   */
+  FEATURE_SEVERITY_UNREVIEWED_DRAFT_RULES: featureFlagSchema,
 });
 
 const productionRequired = [
@@ -56,6 +72,7 @@ const productionRequired = [
   "REDIS_URL",
   "ANTHROPIC_API_KEY",
   "ANTHROPIC_MODEL",
+  "PRESIDIO_ANALYZER_URL",
 ] as const;
 
 export const envSchema = baseSchema.superRefine((env, ctx) => {
@@ -76,6 +93,17 @@ export const envSchema = baseSchema.superRefine((env, ctx) => {
       code: "custom",
       path: ["RECORD_EXPORT_SIGNING_SECRET"],
       message: "RECORD_EXPORT_SIGNING_SECRET is required when FEATURE_HEALTH_RECORDS is true and APP_ENV is not local",
+    });
+  }
+  // Unreviewed clinical rules may run for a demo, never for real patients. Staging is
+  // allowed on purpose: the demo runs there. Production is refused at config load, so
+  // the process will not start rather than serving unreviewed dispositions (spec §8.3.A).
+  if (env.APP_ENV === "production" && env.FEATURE_SEVERITY_UNREVIEWED_DRAFT_RULES) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["FEATURE_SEVERITY_UNREVIEWED_DRAFT_RULES"],
+      message:
+        "FEATURE_SEVERITY_UNREVIEWED_DRAFT_RULES must be false when APP_ENV is production: it executes clinically unreviewed safety rules",
     });
   }
 });

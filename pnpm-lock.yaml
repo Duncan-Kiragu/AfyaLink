@@ -433,6 +433,9 @@ importers:
         specifier: 'catalog:'
         version: 4.5.4
     devDependencies:
+      '@kkd/testing':
+        specifier: workspace:*
+        version: link:../testing
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -462,6 +465,9 @@ importers:
         specifier: 'catalog:'
         version: 4.5.4
     devDependencies:
+      '@kkd/testing':
+        specifier: workspace:*
+        version: link:../testing
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -551,10 +557,16 @@ importers:
 
   packages/pii:
     dependencies:
+      '@kkd/config':
+        specifier: workspace:*
+        version: link:../config
       '@kkd/contracts':
         specifier: workspace:*
         version: link:../contracts
     devDependencies:
+      '@kkd/testing':
+        specifier: workspace:*
+        version: link:../testing
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

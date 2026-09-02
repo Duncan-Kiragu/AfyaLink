@@ -310,3 +310,154 @@ Open questions blocking step 3 are tracked in `docs/adr/ws4-plan.md` §5.
   engine, so the decision stays with the rules and the reviewer. Needs a call with Dancun,
   who consumes it for voice handoff (spec §12.3.E). See plan §5, issue D.
 - **Who signs `reviewedBy`.** See plan §5, issue F.
+
+---
+
+## Diagnosis-language guard
+
+Spec §14, plus §8.3.D's "Never say" line and §8.4.D's prohibited trend statements.
+Implemented in `packages/clinical-safety/src/diagnosis-language/`.
+
+```
+diagnosis-language/
+  pattern-schema.ts               surfaces, pattern + locale-set schema, fragment helpers
+  patterns/en.v0.1.0-draft.ts     the English pattern set (data)
+  registry.ts                     locale lookup
+  guard.ts                        normalization + the matcher
+```
+
+### What it covers
+
+**Two patient-facing surfaces, and only two.** The caller says which one it is checking:
+
+| Surface               | Text it guards                                     | Spec         |
+| --------------------- | -------------------------------------------------- | ------------ |
+| `urgency_explanation` | the prose that explains a disposition to a patient | §8.3.D       |
+| `trend_statement`     | the factual sentence describing check-in history   | §8.4.D, §8.7 |
+
+Both are Workstream 4 surfaces. Both are specified: §8.3.D and §8.4.D each give approved
+wordings _and_ prohibited wordings, which is what makes a pattern set writable rather than
+guessed at.
+
+The two sentences the spec names by hand are covered by name, and each has its own test:
+
+- §8.3.D — _"You probably have X, so you can wait."_ → `en.unapproved_deferral.diagnosis_led`
+- §8.4.D — _"Your likelihood of X is increasing."_ → `en.likelihood_statement.probability_noun`
+
+### What it deliberately does not cover
+
+- **Ranked possible causes — scope open.** Whether KKD ever shows a ranked list of possible
+  causes has not been decided by the team. This guard takes no position on it: there is no
+  surface for it, no pattern written against it, and no assumption about it in the corpus.
+  If that feature ships, it arrives as a **new surface with its own patterns and its own
+  caller**. Nothing in this guard needs to change for the two surfaces above to keep
+  behaving exactly as they do now. Guessing the shape of that feature now and building
+  patterns around the guess is the failure mode this note exists to prevent.
+- **The other §14 surfaces.** §14 also lists web, summary, WhatsApp, USSD free text, voice
+  scripts, MCP outputs, and exported patient documents. Those belong to their channel
+  owners. They can call this guard, but the surfaces they need are theirs to specify — a
+  voice script and a trend sentence do not have the same approved wordings, so they do not
+  share a pattern list.
+  Note that `apps/api/src/modules/voice/diagnosis-guard.ts` already carries a small literal
+  phrase list of its own. It is deliberately untouched here (voice is Dancun's). Folding it
+  into a `voice_script` surface is a follow-up conversation, not this slice.
+- **Kiswahili.** The shipped registry is English only. §10.4.D makes the per-language
+  corpus a joint piece of work with Brian and Evans, and the Kiswahili patterns are theirs
+  to review. Until they exist, a call with `locale: "sw"` **fails closed** (see below).
+- **Rewriting.** The guard reports; it does not repair. A rewrite would be new
+  patient-facing wording, and no wording ships from this repository before clinical review.
+- **Prompting and structured output.** §14: _"A post-generation guard does not replace good
+  prompts and structured outputs; use all three layers."_ This is the third layer only.
+
+### Why it is not a phrase list
+
+§10.4.D: _"A literal phrase list is not enough; test paraphrases and code switching."_
+
+Patterns match the **frame** of a diagnostic sentence, never a list of disease names. A
+frame is composed from lexical fragments — a subject, hedges, a possession verb, a
+deferral, a claim verb — joined by `words()` (adjacent) or `near()` (within one sentence,
+with a gap). Three consequences:
+
+1. **Paraphrase.** "You are most likely suffering from X", "You have got some kind of X"
+   and "You probably have X" are one pattern, not three strings.
+2. **Code switching.** The condition name, the subject, and the trailing verb can be in
+   another language and the frame still trips: _"You probably have homa ya matumbo, so you
+   can wait"_, _"Pole sana, but wewe probably have typhoid"_, _"Your likelihood ya kupata
+   malaria inaongezeka"_. What the guard cannot catch is a frame that is **wholly** in
+   another language — that needs that language's pattern set, which is exactly why the
+   unsupported-locale case fails closed rather than passing.
+3. **Unknown conditions.** No disease list means no gap for a disease nobody listed.
+
+The likelihood pattern is deliberately blunt: on these two surfaces KKD does not state a
+probability _at all_, so the noun alone is prohibited with no object required. That is what
+survives a code-switched connector.
+
+### Adding a locale is a data addition
+
+Write `patterns/<locale>.v<semver>-draft.ts`, composing patterns from the helpers exported
+by `pattern-schema.ts` (`anyOf`, `words`, `near`, `prohibitedPattern`), and register the
+set in `registry.ts`. No guard, schema or matcher code changes. A test in
+`guard.test.ts` builds a second locale from those helpers alone to keep that true.
+
+`defineLocalePatternSet` validates at load: a malformed pattern, a duplicate id, an id
+belonging to another locale, or a `g`/`y` regex (whose `lastIndex` would make the guard
+non-deterministic between calls) is a load-time failure.
+
+**There is no clinical-review gate on pattern sets**, unlike rules and pathways. A rule
+decides what a patient is told to do, so an unreviewed one must not run. This guard only
+ever _refuses_ text: running an unreviewed pattern can over-block, never under-block, and
+gating it behind review would make the conservative behaviour the opt-in. Linguistic review
+still matters and is tracked per pattern-set version.
+
+### Fail closed, and say so
+
+`allowed` and `coverage` are separate fields, for the same reason `urgency` and
+`unknownReason` are separate: _"we checked and found nothing"_ and _"we could not check"_
+must never be presented identically.
+
+| `coverage`                | Meaning                                             | `allowed`          |
+| ------------------------- | --------------------------------------------------- | ------------------ |
+| `checked`                 | patterns exist for this locale and surface, and ran | findings-dependent |
+| `unsupported_locale`      | no pattern set registered for the locale            | always `false`     |
+| `no_patterns_for_surface` | locale registered, but declares nothing for it      | always `false`     |
+
+Unchecked text is never allowed. §8.3.C's principle — never manufacture reassurance out of
+an absence of information — applies to the guard as much as to the engine.
+
+### Synchronous, like the engine
+
+`DiagnosisLanguageGuard.inspect` returns a verdict, not a `Promise`. Normalization and
+regex matching over an in-memory, version-pinned pattern set are pure computation with no
+I/O, so there is nothing for a Promise to represent. It also sits in the same synchronous
+safety path as `SafetyEngine` (§8.7, _"safety-critical execution is synchronous"_); an
+async guard would invite a caller to render text before the check resolved. The interface
+was changed from the `Promise`-returning scaffold for the same reason `SafetyEngine` was.
+
+### Known false positives, accepted
+
+The guard prefers a false positive (a template gets rewritten) to a false negative (a
+diagnosis reaches a patient). A deterministic layer cannot tell a disease name from a
+symptom name without a lexicon, so possession frames are flagged whatever follows them:
+
+> ❌ "You have had a fever for three days." → ✅ "You reported fever for three days."
+
+That rewrite is the house style anyway — §8.4.C requires check-ins built on _"previously
+reported facts, not a disease label"_. Every wording the spec itself approves is tested to
+pass, including §8.3.D's _"Based on what you have reported…"_, which is why the possession
+pattern exempts reporting verbs and only reporting verbs.
+
+`DiagnosisLanguageFinding.matchedText` is patient-derived text. §18 forbids raw symptom
+text in logs — the loggable field is `patternId`, the way `ruleId` is for rules.
+
+### Regression corpus
+
+Cases live in `packages/testing/src/regression/diagnosis-language.ts` so the other channel
+owners can read and extend them (§21.3, §10.4.D). Each case names its folder from the
+declared `regressionSuiteFolders`, its surface, its locale, and whether the guard must
+prohibit or allow it — the `allowed` cases are the false-positive rail, and include all
+five wordings §8.3.D and §8.4.D approve.
+
+A case that cannot pass yet carries `blockedOn` and is not asserted as a match; it is still
+asserted to be _refused_ rather than passed, and is listed in test output so the gap stays
+visible. Today that is one case: a wholly Kiswahili diagnostic frame, blocked on the
+Kiswahili pattern set.

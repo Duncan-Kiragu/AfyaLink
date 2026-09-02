@@ -1,22 +1,23 @@
-import type { KkdAiService } from "@kkd/contracts";
-
-export type { KkdAiService };
-
-export class UnimplementedAiService implements KkdAiService {
-  extractReportedFacts(): Promise<never> {
-    return Promise.reject(new Error("@kkd/ai extractReportedFacts is not implemented"));
-  }
-  planNextQuestion(): Promise<never> {
-    return Promise.reject(new Error("@kkd/ai planNextQuestion is not implemented"));
-  }
-  summarizeSession(): Promise<never> {
-    return Promise.reject(new Error("@kkd/ai summarizeSession is not implemented"));
-  }
-  normalizeLanguage(): Promise<never> {
-    return Promise.reject(new Error("@kkd/ai normalizeLanguage is not implemented"));
-  }
-}
-
-export function createAiService(): KkdAiService {
-  return new UnimplementedAiService();
-}
+export type { KkdAiService } from "@kkd/contracts";
+export {
+  ClaudeAiService,
+  DEFAULT_ANTHROPIC_MODEL,
+  UnimplementedAiService,
+  createAiService,
+  createAiServiceFromEnv,
+  type CreateAiServiceOptions,
+} from "./claude-ai-service.js";
+export {
+  createAnthropicStructuredClient,
+  type ClaudeStructuredClient,
+  type ClaudeStructuredRequest,
+  type ClaudeStructuredResult,
+} from "./claude-client.js";
+export {
+  AiConfigurationError,
+  AiOutputInvalidError,
+  AiPiiBlockedError,
+  AiSessionContextMissingError,
+} from "./errors.js";
+export { prompts } from "./prompts/index.js";
+export type { SessionContext, SessionContextReader } from "./session-context.js";
