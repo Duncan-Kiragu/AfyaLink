@@ -15,6 +15,13 @@ export const apiV1 = {
   providersSearch: "/api/v1/providers/search",
   profileFollowups: "/api/v1/profile/followups",
   voiceCallback: "/api/v1/voice/callback",
+  /** Baileys gateway -> API. HMAC-signed, not a public webhook. */
+  whatsappInbound: "/api/v1/integrations/whatsapp/inbound",
+  whatsappStatus: "/api/v1/integrations/whatsapp/status",
+  whatsappOutbox: "/api/v1/integrations/whatsapp/outbox",
+  whatsappHealth: "/api/v1/integrations/whatsapp/health",
+  /** USSD aggregator callback. */
+  ussdCallback: "/api/v1/integrations/ussd",
 } as const;
 
 export const apiModules = [

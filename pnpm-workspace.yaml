@@ -3,8 +3,12 @@ packages:
   - packages/*
 
 allowBuilds:
+  # `baileys` only declares a `prepare` script (`npm run build`), which is for
+  # git/local installs. Registry tarballs ship prebuilt, so skip it.
+  baileys: false
   esbuild: true
   msgpackr-extract: true
+  protobufjs: true
 
 catalog:
   "@anthropic-ai/sdk": "^0.123.0"
@@ -22,10 +26,12 @@ catalog:
   "@types/cors": "^2.8.19"
   "@types/express": "^5.0.6"
   "@types/node": "^24.13.3"
+  "@types/qrcode-terminal": "^0.12.2"
   "@types/react": "^19.2.18"
   "@types/react-dom": "^19.2.5"
   "@types/supertest": "^7.2.1"
   "@vitejs/plugin-react": "^6.1.1"
+  baileys: "^7.0.0-rc14"
   bullmq: "^6.3.4"
   cors: "^2.8.6"
   dotenv: "^17.4.2"
@@ -37,6 +43,7 @@ catalog:
   jsdom: "^30.0.1"
   pino: "^10.3.1"
   pino-pretty: "^13.1.3"
+  qrcode-terminal: "^0.12.0"
   react: "^19.2.8"
   react-dom: "^19.2.8"
   react-hook-form: "^7.87.0"

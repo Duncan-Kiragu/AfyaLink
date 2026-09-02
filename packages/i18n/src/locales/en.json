@@ -5,5 +5,74 @@
   "urgency.emergency": "Seek emergency care now",
   "consent.saveRecord": "Save selected facts to my health record",
   "privacy.settings": "Privacy settings",
-  "error.retry": "Something went wrong. Please try again."
+  "error.retry": "Something went wrong. Please try again.",
+
+  "channel.disclosure.whatsapp": "This is an automated KKD assistant powered by AI. It does not diagnose. It helps you put your symptoms into clear words before you see a healthcare professional. Do not rely on it in an emergency. This chat is temporary and is not saved to a health record.\n\nReply 1 to continue.",
+  "channel.disclosure.ussd": "KKD uses AI. It does not diagnose. It helps describe symptoms before you see a health worker. Not for emergencies. Temporary session.\n1. Continue\n2. Exit",
+  "channel.disclosure.required": "Please reply 1 to confirm you have read the notice above before describing symptoms.",
+  "channel.disclosure.declined": "No problem. Nothing was saved. If your situation is urgent, contact a healthcare professional or your local emergency number now.",
+
+  "channel.language.prompt": "Choose a language / Chagua lugha",
+  "channel.language.en": "English",
+  "channel.language.sw": "Kiswahili",
+  "channel.language.changed": "Language changed to English.",
+  "channel.language.hint": "Send LANG at any time to change language.",
+
+  "channel.session.expired": "Your previous temporary session expired and was deleted. We are starting over.",
+  "channel.session.closed": "This temporary session is closed and its contents have been deleted. Nothing was saved to a health record.",
+  "channel.session.restart": "Send HI to start a new session.",
+
+  "channel.prompt.describe": "In your own words, what are you experiencing right now?",
+  "channel.prompt.chooseNumber": "Reply with the number of your answer.",
+  "channel.prompt.freeText": "Reply with a short answer.",
+  "channel.prompt.severityScale": "Reply with a number from 0 to 10.",
+  "channel.prompt.notUnderstood": "Sorry, that was not one of the options. {{hint}}",
+
+  "channel.media.unsupported": "This assistant cannot review images, voice notes, or documents. Nothing was opened or forwarded. Please describe what you are experiencing in text.",
+  "channel.message.tooLong": "That message is too long for this channel. Please send a shorter description.",
+  "channel.message.empty": "We did not receive any text. Please describe what you are experiencing.",
+
+  "channel.safety.emergency": "Based on what you have reported, this needs emergency assessment now. Go to the nearest emergency department or call your local emergency number immediately. Do not wait for this conversation to finish.",
+  "channel.safety.urgentToday": "Based on what you have reported, the safest next step is to be assessed by a healthcare professional today.",
+  "channel.safety.soon": "Based on what you have reported, arrange to be seen by a healthcare professional soon.",
+  "channel.safety.monitor": "No urgent warning sign has been identified from the information collected so far. Keep monitoring and seek professional care sooner if new or worsening symptoms appear.",
+  "channel.safety.unknown": "There is not enough information here to judge how soon you should be seen. Please speak to a healthcare professional so they can assess you properly.",
+  "channel.safety.unavailable": "The safety check could not be completed. Please speak to a healthcare professional about these symptoms rather than waiting.",
+
+  "channel.safety.ussd.emergency": "This needs emergency care NOW. Go to the nearest emergency unit or call your emergency number immediately.",
+  "channel.safety.ussd.urgentToday": "Safest next step: be seen by a health professional today.",
+  "channel.safety.ussd.soon": "Arrange to see a health professional soon.",
+  "channel.safety.ussd.monitor": "No urgent warning sign found so far. Keep monitoring. Seek care sooner if symptoms are new or worsening.",
+  "channel.safety.ussd.unknown": "Not enough information to judge urgency. Please see a health professional to be assessed.",
+  "channel.safety.ussd.unavailable": "Safety check could not complete. Please see a health professional rather than waiting.",
+
+  "channel.summary.ready": "Here is a factual account of what you reported. You can read it out or show it to the healthcare professional you see.",
+  "channel.summary.offer": "Would you like a factual summary of what you reported?",
+  "channel.summary.viaWhatsapp": "Send it to me on WhatsApp",
+  "channel.summary.declined": "No summary was sent.",
+  "channel.summary.unavailable": "The summary could not be prepared right now. The urgency guidance above still applies.",
+
+  "channel.persistence.notAvailable": "This channel keeps nothing after the session ends. To save facts to a personal health record you need to sign in on the KKD website and give consent there.",
+
+  "channel.service.aiUnavailable": "The conversation assistant is temporarily unavailable, so questions may be shorter than usual. Safety checks are still running.",
+  "channel.service.unavailable": "KKD is temporarily unavailable. Please try again shortly. If your situation feels urgent, contact a healthcare professional now.",
+
+  "channel.ussd.symptomCategory": "What is the main problem?",
+  "channel.ussd.moreOptions": "0. More",
+  "channel.ussd.exit": "Session ended. If your situation is urgent, contact a healthcare professional now.",
+  "channel.ussd.depthLimited": "This menu cannot collect enough detail to judge urgency safely. Please have a healthcare professional assess you.",
+
+  "pathway.generic.onset": "When did this start?",
+  "pathway.generic.location": "Where in your body do you feel it?",
+  "pathway.generic.severity": "How bad is it right now, from 0 to 10?",
+  "pathway.generic.worsening": "Has it got worse since it started?",
+  "pathway.generic.associated": "What else have you noticed alongside it?",
+  "pathway.generic.medicationTaken": "Have you taken any medicine for it? Which one?",
+
+  "channel.choice.yes": "Yes",
+  "channel.choice.no": "No",
+  "channel.choice.unsure": "Not sure",
+  "channel.choice.continue": "Continue",
+  "channel.choice.exit": "Exit",
+  "channel.choice.skip": "Skip"
 }

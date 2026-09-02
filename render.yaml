@@ -24,6 +24,15 @@ services:
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/worker build
     startCommand: pnpm --filter @kkd/worker start
 
+  # Baileys holds one stateful WebSocket and one WhatsApp linked-device session,
+  # so this must be a single-instance background worker rather than a scaled web
+  # service. A Redis lock enforces the single writer if it is ever scaled up.
+  - type: worker
+    name: kkd-whatsapp-stage
+    runtime: node
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/whatsapp-gateway build
+    startCommand: pnpm --filter @kkd/whatsapp-gateway start
+
   - type: web
     name: kkd-mcp-stage
     runtime: node

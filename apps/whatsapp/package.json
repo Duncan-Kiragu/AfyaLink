@@ -1,0 +1,33 @@
+{
+  "name": "@kkd/whatsapp-gateway",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc --noEmit",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests --config ../../vitest.package.config.ts"
+  },
+  "dependencies": {
+    "@kkd/config": "workspace:*",
+    "@kkd/contracts": "workspace:*",
+    "@kkd/integrations": "workspace:*",
+    "@kkd/observability": "workspace:*",
+    "baileys": "catalog:",
+    "dotenv": "catalog:",
+    "ioredis": "catalog:",
+    "qrcode-terminal": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@kkd/testing": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/qrcode-terminal": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
