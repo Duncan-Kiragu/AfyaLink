@@ -7,6 +7,7 @@ export * from "./integrations.js";
 export * from "./jobs.js";
 export * from "./mcp.js";
 export * from "./pii.js";
+export * from "./profiles.js";
 export * from "./records.js";
 export * from "./safety.js";
 export * from "./scores.js";

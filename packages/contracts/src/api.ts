@@ -17,7 +17,13 @@ export const apiV1 = {
   recordExportJob: (jobId: string) => `/api/v1/records/exports/${jobId}`,
   locationSearch: "/api/v1/location/search",
   providersSearch: "/api/v1/providers/search",
+  profileConsent: "/api/v1/profile/consent",
   profileFollowups: "/api/v1/profile/followups",
+  profileFollowup: (id: string) => `/api/v1/profile/followups/${id}`,
+  profileCheckInsDue: "/api/v1/profile/checkins/due",
+  profileCheckInAnswers: (scheduleId: string) =>
+    `/api/v1/profile/followups/${scheduleId}/checkins`,
+  profileTrends: "/api/v1/profile/trends",
   voiceCallback: "/api/v1/voice/callback",
   voiceCallbackCancel: "/api/v1/voice/callback/cancel",
   voiceStatus: "/api/v1/voice/status",
