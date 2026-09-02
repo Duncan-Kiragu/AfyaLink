@@ -40,7 +40,12 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     return;
   }
 
+  if (err instanceof Error && "statusCode" in err && typeof err.statusCode === "number") {
+    res.status(err.statusCode).json({ error: err.message, requestId });
+    return;
+  }
+
   // Path only — never the body, query string, or error message.
-  log.error({ requestId: String(requestId ?? ""), status: req.path }, "unhandled_error");
+  log.error({ requestId: String(requestId ?? ""), path: req.path }, "unhandled_error");
   res.status(500).json({ error: "internal_error", requestId });
 }

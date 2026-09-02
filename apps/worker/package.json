@@ -14,7 +14,9 @@
   "dependencies": {
     "@kkd/config": "workspace:*",
     "@kkd/contracts": "workspace:*",
+    "@kkd/integrations": "workspace:*",
     "@kkd/observability": "workspace:*",
+    "@supabase/supabase-js": "catalog:",
     "bullmq": "catalog:",
     "dotenv": "catalog:",
     "ioredis": "catalog:"

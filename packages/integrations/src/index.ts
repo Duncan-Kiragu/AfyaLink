@@ -1,6 +1,13 @@
 import type { ConversationChannelAdapter, ExternalApiAdapter } from "@kkd/contracts";
 
 export type { ConversationChannelAdapter, ExternalApiAdapter };
+export {
+  applyMockTelephonyEvent,
+  fetchConversationToken,
+  processVoiceJob,
+  resetMockTelephonyEvents,
+  VOICE_ADAPTER,
+} from "./voice/index.js";
 
 export const adapterFolders = ["geo", "providers", "whatsapp", "ussd", "voice"] as const;
 

@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #EDEFF3; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  a { color: #1D4E89; text-decoration: none; }
+  a:hover { color: #C2571A; }
+  @keyframes dcRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes dcPulse { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #EDEFF3; color: #171A1F; font-family: Inter, system-ui, sans-serif;">
+
+  <div style="background: #171A1F; color: #EDEFF3; padding: 9px 20px; display: flex; gap: 10px; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .04em; position: sticky; top: 0; z-index: 30; text-align: center;">
+    <span style="width: 7px; height: 7px; border-radius: 50%; background: #C2571A; flex: none; animation: dcPulse 2.4s ease-in-out infinite;"></span>
+    <span>NOT A DIAGNOSIS — this is a triage aid. A licensed clinician confirms everything.</span>
+  </div>
+
+  <div style="position: sticky; top: 33px; z-index: 29; background: #EDEFF3; border-bottom: 1px solid #DDE2EA;">
+    <div style="max-width: 900px; margin: 0 auto; padding: 10px 20px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+      <div style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+        <img onClick="{{ goBrandHome }}" src="afyalink-ink.svg" alt="AfyaLink" title="Back to home" style="height: 30px; width: auto; display: block; flex: none; cursor: pointer; transition: opacity .15s ease;" style-hover="opacity: .6;" />
+        <div style="width: 1px; height: 24px; background: #DDE2EA; flex: none;"></div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+            <div onClick="{{ t.pick }}" style="background: {{ t.bg }}; color: {{ t.fg }}; border: 1px solid {{ t.border }}; border-radius: 999px; padding: 8px 15px; font-size: 13px; font-weight: 500; cursor: pointer;">{{ t.label }}</div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display: flex; gap: 4px; background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 999px; padding: 3px;">
+        <sc-for list="{{ langs }}" as="l" hint-placeholder-count="2">
+          <div onClick="{{ l.pick }}" style="background: {{ l.bg }}; color: {{ l.fg }}; border-radius: 999px; padding: 6px 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;">{{ l.label }}</div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width: 900px; margin: 0 auto; padding: 0 20px 80px;">
+
+    <sc-if value="{{ isOnboard }}" hint-placeholder-val="{{ true }}">
+      <div style="padding: 52px 0 0; animation: dcRise .4s ease both; max-width: 660px;">
+        <img src="afyalink-ink.svg" alt="AfyaLink" style="height: 66px; width: auto; display: block;" />
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .16em; color: #6E7686; margin-top: 22px;">NAIROBI · SWAHILI &amp; ENGLISH · APP, WHATSAPP, USSD</div>
+        <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(38px, 7vw, 60px); line-height: .95; letter-spacing: -.02em; margin: 14px 0 0;">Tell it what<br />hurts.</h1>
+        <p style="font-size: 17px; line-height: 1.55; color: #454B57; max-width: 46ch; margin: 20px 0 0;">A structured symptom interview, a ranked list of likely causes, the medicine each one is normally treated with — and a clear answer on whether you need a clinic today.</p>
+
+        <div style="display: grid; gap: 12px; margin: 34px 0 0;">
+          <sc-for list="{{ onboardPoints }}" as="p" hint-placeholder-count="4">
+            <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 14px; padding: 18px 20px; display: flex; gap: 16px; align-items: flex-start;">
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 20px; color: #1D4E89; line-height: 1; flex: none;">{{ p.n }}</div>
+              <div><div style="font-weight: 600; font-size: 15px;">{{ p.title }}</div><div style="font-size: 14px; color: #6E7686; margin-top: 4px; line-height: 1.5;">{{ p.body }}</div></div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div onClick="{{ toggleConsent }}" style="margin: 26px 0 0; background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 14px; padding: 16px 18px; display: flex; gap: 14px; align-items: center; cursor: pointer;" style-hover="border-color: #1D4E89;">
+          <div style="width: 22px; height: 22px; border-radius: 6px; flex: none; border: 2px solid {{ boxBorder }}; background: {{ boxFill }}; color: #FBFCFD; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;">{{ boxMark }}</div>
+          <div style="font-size: 14px; line-height: 1.45; color: #454B57;">I understand this is not medical care, that an AI conducts the interview, and I consent to my answers being used to prepare an assessment.</div>
+        </div>
+
+        <div onClick="{{ startFromOnboard }}" style="margin: 16px 0 0; background: {{ ctaBg }}; color: #FBFCFD; border-radius: 14px; padding: 18px 22px; font-weight: 600; font-size: 16px; text-align: center; cursor: pointer; transition: transform .15s ease;" style-hover="transform: translateY(-2px);">Continue</div>
+        <div style="text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7686; margin-top: 14px;">Emergency? Call 999 or go to the nearest casualty.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 40px 0 0; animation: dcRise .4s ease both;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+          <div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .16em; color: #6E7686;">WEDNESDAY, 2 SEPT</div>
+            <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(30px, 5.5vw, 42px); letter-spacing: -.02em; margin: 10px 0 0;">Habari, Amina.</h1>
+          </div>
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: #1D4E89; color: #FBFCFD; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; flex: none;">AW</div>
+        </div>
+
+        <div onClick="{{ goChat }}" style="margin: 26px 0 0; background: #1D4E89; color: #FBFCFD; border-radius: 18px; padding: 26px; cursor: pointer; transition: transform .15s ease;" style-hover="transform: translateY(-3px);">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; opacity: .7;">NEW ASSESSMENT</div>
+          <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; margin-top: 8px; line-height: 1.1;">Describe your symptoms →</div>
+          <div style="font-size: 14px; opacity: .8; margin-top: 8px;">About 6 questions. Roughly 3 minutes.</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 12px;">
+          <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 14px; padding: 16px 18px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">ASSESSMENTS</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; margin-top: 6px;">3</div>
+          </div>
+          <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 14px; padding: 16px 18px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">SENT TO A CLINIC</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; margin-top: 6px; color: #C2571A;">1</div>
+          </div>
+          <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 14px; padding: 16px 18px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">SELF-MANAGED</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 30px; margin-top: 6px;">2</div>
+          </div>
+        </div>
+
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: #6E7686; margin: 34px 0 12px;">HISTORY</div>
+        <div style="display: grid; gap: 10px;">
+          <sc-for list="{{ history }}" as="h" hint-placeholder-count="3">
+            <div onClick="{{ h.open }}" style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 14px; padding: 16px 18px; display: flex; gap: 14px; align-items: center; cursor: pointer;" style-hover="border-color: #1D4E89;">
+              <div style="width: 8px; height: 40px; border-radius: 4px; background: {{ h.tone }}; flex: none;"></div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600; font-size: 15px;">{{ h.title }}</div>
+                <div style="font-size: 13px; color: #6E7686; margin-top: 3px;">{{ h.sub }}</div>
+              </div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #9AA2B1; flex: none;">{{ h.date }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isChat }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 26px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; align-items: start;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div onClick="{{ goHome }}" style="width: 38px; height: 38px; border-radius: 10px; border: 1px solid #DDE2EA; background: #FBFCFD; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex: none;" style-hover="border-color: #1D4E89;">←</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 600; font-size: 15px;">{{ interviewTitle }}</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7686;">{{ progressLabel }}</div>
+            </div>
+          </div>
+
+          <sc-if value="{{ showMeter }}" hint-placeholder-val="{{ true }}">
+            <div style="height: 5px; border-radius: 3px; background: #DDE2EA; margin: 16px 0 0; overflow: hidden;">
+              <div style="height: 100%; border-radius: 3px; background: #1D4E89; width: {{ progressPct }}; transition: width .5s cubic-bezier(.4,0,.2,1);"></div>
+            </div>
+          </sc-if>
+
+          <div style="display: flex; flex-direction: column; gap: 12px; margin: 26px 0 0;">
+            <sc-for list="{{ messages }}" as="m" hint-placeholder-count="2">
+              <div style="display: flex; justify-content: {{ m.align }}; animation: dcRise .35s ease both;">
+                <div style="max-width: 82%; background: {{ m.bg }}; color: {{ m.fg }}; border: 1px solid {{ m.border }}; border-radius: {{ m.radius }}; padding: 14px 17px; font-size: 15px; line-height: 1.5;">{{ m.text }}</div>
+              </div>
+            </sc-for>
+            <sc-if value="{{ typing }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; gap: 5px; padding: 4px 2px;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #9AA2B1; animation: dcPulse 1s ease-in-out infinite;"></span>
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #9AA2B1; animation: dcPulse 1s ease-in-out .2s infinite;"></span>
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #9AA2B1; animation: dcPulse 1s ease-in-out .4s infinite;"></span>
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ interviewDone }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ goTriage }}" style="margin: 24px 0 0; background: #C2571A; color: #FBFCFD; border-radius: 14px; padding: 18px 22px; font-weight: 600; font-size: 16px; text-align: center; cursor: pointer; animation: dcRise .4s ease both;" style-hover="transform: translateY(-2px);">{{ assessCta }}</div>
+          </sc-if>
+
+          <sc-if value="{{ hasChips }}" hint-placeholder-val="{{ true }}">
+            <div style="position: sticky; bottom: 0; background: linear-gradient(to top, #EDEFF3 62%, rgba(237,239,243,0)); padding: 26px 0 18px; margin-top: 18px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686; margin-bottom: 10px;">{{ chipHint }}</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+                  <div onClick="{{ c.pick }}" style="background: #FBFCFD; border: 1px solid #BFC8D6; border-radius: 999px; padding: 11px 16px; font-size: 14px; cursor: pointer; transition: all .15s ease;" style-hover="background: #1D4E89; color: #FBFCFD; border-color: #1D4E89;">{{ c.label }}</div>
+                </sc-for>
+              </div>
+              <div style="margin-top: 10px; background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 12px; padding: 13px 16px; font-size: 14px; color: #9AA2B1;">{{ typePlaceholder }}</div>
+            </div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ showFacts }}" hint-placeholder-val="{{ true }}">
+          <div style="position: sticky; top: 96px; background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 18px; padding: 20px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">WHAT IT HAS PICKED UP</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 19px; margin-top: 6px; line-height: 1.15;">Structured symptom record</div>
+            <div style="font-size: 12px; color: #6E7686; line-height: 1.45; margin-top: 6px;">Every answer becomes a tagged fact. This is what the clinician receives — not the chat.</div>
+
+            <div style="display: grid; gap: 8px; margin-top: 16px;">
+              <sc-for list="{{ facts }}" as="f" hint-placeholder-count="3">
+                <div style="border: 1px solid #E4E8EF; border-radius: 11px; padding: 11px 13px; animation: dcRise .3s ease both;">
+                  <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center;">
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .06em; color: #6E7686;">{{ f.concept }}</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .06em; color: {{ f.tone }}; border: 1px solid {{ f.tone }}; border-radius: 5px; padding: 2px 5px; flex: none;">{{ f.status }}</div>
+                  </div>
+                  <div style="font-size: 14px; margin-top: 5px; line-height: 1.35;">{{ f.value }}</div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ noFacts }}" hint-placeholder-val="{{ true }}">
+                <div style="font-size: 13px; color: #9AA2B1; line-height: 1.5; padding: 14px 0;">Nothing yet. Facts appear here as you answer — each tagged reported, denied or measured, so nothing gets invented later.</div>
+              </sc-if>
+            </div>
+
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #DDE2EA; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #6E7686; line-height: 1.6;">
+              <div>SESSION {{ sessionId }} · NAMES &amp; NUMBERS REDACTED</div>
+              <div>KEPT {{ ttl }} UNLESS YOU SAVE IT</div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isTriage }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 28px 0 0; animation: dcRise .4s ease both;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .16em; color: #6E7686;">TRIAGE RESULT</div>
+        <div style="margin: 14px 0 0; background: #C2571A; color: #FBFCFD; border-radius: 20px; padding: 30px;">
+          <div style="display: flex; gap: 8px; margin-bottom: 18px;">
+            <sc-for list="{{ urgScale }}" as="u" hint-placeholder-count="5">
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: {{ u.bg }};"></div>
+            </sc-for>
+          </div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; opacity: .78;">URGENCY LEVEL 3 OF 5</div>
+          <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(28px, 5.4vw, 40px); line-height: 1.05; letter-spacing: -.02em; margin: 12px 0 0;">See a clinician within 24 hours.</h1>
+          <p style="font-size: 16px; line-height: 1.55; margin: 14px 0 0; opacity: .92;">Do not self-medicate for this. The leading possible cause requires a blood test before any treatment is started, and the test takes minutes at most clinics and pharmacies with a lab.</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 12px;">
+          <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 20px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #C2571A;">WHY NOT SELF-CARE</div>
+            <div style="display: grid; gap: 9px; margin-top: 12px;">
+              <sc-for list="{{ whyNot }}" as="w" hint-placeholder-count="3">
+                <div style="font-size: 14px; line-height: 1.45; color: #454B57; display: flex; gap: 9px;"><span style="color: #C2571A; font-weight: 700;">—</span><span>{{ w.t }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 20px;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #1D4E89;">GO IMMEDIATELY IF</div>
+            <div style="display: grid; gap: 9px; margin-top: 12px;">
+              <sc-for list="{{ redFlags }}" as="r" hint-placeholder-count="3">
+                <div style="font-size: 14px; line-height: 1.45; color: #454B57; display: flex; gap: 9px;"><span style="color: #1D4E89; font-weight: 700;">—</span><span>{{ r.t }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 20px; margin-top: 12px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">MEANWHILE, SAFE TO DO</div>
+          <div style="font-size: 14px; line-height: 1.55; color: #454B57; margin-top: 10px;">Paracetamol 1&nbsp;g every 6–8 hours (max 4&nbsp;g/day) for fever and headache. Oral fluids, roughly 2–3 litres today. No antibiotics and no antimalarials until you are tested.</div>
+        </div>
+
+        <div style="background: #171A1F; color: #EDEFF3; border-radius: 16px; padding: 20px; margin-top: 12px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; opacity: .6;">HOW THE URGENCY WAS SET — FIXED RULES, NOT THE MODEL</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+            <sc-for list="{{ triageRules }}" as="r" hint-placeholder-count="3">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; border: 1px solid #454B57; border-radius: 7px; padding: 7px 10px;">{{ r.t }}</div>
+            </sc-for>
+          </div>
+          <div style="font-size: 13px; line-height: 1.55; opacity: .72; margin-top: 14px;">Rule set v2.3, signed off by the clinical panel on 18 Aug 2026. The AI ranks the causes; it cannot lower the urgency the rules set.</div>
+        </div>
+
+        <div onClick="{{ goResults }}" style="margin-top: 20px; background: #1D4E89; color: #FBFCFD; border-radius: 14px; padding: 18px; font-weight: 600; font-size: 16px; text-align: center; cursor: pointer;" style-hover="transform: translateY(-2px);">View possible causes →</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 24px 0 0; animation: dcRise .4s ease both;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div onClick="{{ goTriage }}" style="width: 38px; height: 38px; border-radius: 10px; border: 1px solid #DDE2EA; background: #FBFCFD; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex: none;" style-hover="border-color: #1D4E89;">←</div>
+          <div style="font-weight: 600; font-size: 15px;">Possible causes</div>
+        </div>
+        <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(26px, 5vw, 36px); letter-spacing: -.02em; margin: 22px 0 0; line-height: 1.05;">Fever, chills and headache — 3 days, after travel to Kisumu.</h1>
+        <p style="font-size: 14px; color: #6E7686; line-height: 1.55; margin: 12px 0 0; max-width: 58ch;">Ranked from 6 answers. Likelihood is an estimate from symptom pattern and local disease prevalence, not a test result.</p>
+
+        <div style="display: grid; gap: 12px; margin: 26px 0 0;">
+          <sc-for list="{{ diagnoses }}" as="d" hint-placeholder-count="4">
+            <div onClick="{{ d.open }}" style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 22px; cursor: pointer; transition: all .15s ease;" style-hover="border-color: #1D4E89; transform: translateY(-2px);">
+              <div style="display: flex; justify-content: space-between; gap: 14px; align-items: baseline;">
+                <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 21px; letter-spacing: -.01em;">{{ d.name }}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6E7686; flex: none;">{{ d.tag }}</div>
+              </div>
+              <div style="font-size: 14px; color: #6E7686; line-height: 1.5; margin-top: 7px;">{{ d.blurb }}</div>
+
+              <sc-if value="{{ useDots }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap;">
+                  <div style="display: flex; gap: 4px;">
+                    <sc-for list="{{ d.dots }}" as="dot" hint-placeholder-count="10">
+                      <span style="width: 13px; height: 13px; border-radius: 3px; background: {{ dot.bg }};"></span>
+                    </sc-for>
+                  </div>
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #454B57;">{{ d.dotLabel }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ useBars }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 12px; margin-top: 16px;">
+                  <div style="flex: 1; height: 10px; border-radius: 5px; background: #E4E8EF; overflow: hidden;">
+                    <div style="height: 100%; border-radius: 5px; background: {{ d.color }}; width: {{ d.pctLabel }};"></div>
+                  </div>
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #454B57; flex: none;">{{ d.pctLabel }}</div>
+                </div>
+              </sc-if>
+
+              <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed #DDE2EA; display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <div style="font-size: 13px; color: #454B57;"><span style="color: #6E7686;">Usual treatment:</span> {{ d.drugShort }}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #1D4E89; flex: none;">DETAILS →</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+          <div onClick="{{ goDoctors }}" style="flex: 1; min-width: 200px; background: #C2571A; color: #FBFCFD; border-radius: 14px; padding: 17px; font-weight: 600; font-size: 15px; text-align: center; cursor: pointer;" style-hover="transform: translateY(-2px);">Find a clinic →</div>
+          <div onClick="{{ goCallback }}" style="flex: 1; min-width: 200px; background: #1D4E89; color: #FBFCFD; border-radius: 14px; padding: 17px; font-weight: 600; font-size: 15px; text-align: center; cursor: pointer;" style-hover="transform: translateY(-2px);">Talk to a human clinician</div>
+          <div onClick="{{ goSummary }}" style="flex: 1; min-width: 200px; background: #FBFCFD; border: 1px solid #BFC8D6; border-radius: 14px; padding: 17px; font-weight: 600; font-size: 15px; text-align: center; cursor: pointer;" style-hover="border-color: #1D4E89;">Prepare clinician summary</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 24px 0 0; animation: dcRise .4s ease both;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div onClick="{{ goResults }}" style="width: 38px; height: 38px; border-radius: 10px; border: 1px solid #DDE2EA; background: #FBFCFD; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex: none;" style-hover="border-color: #1D4E89;">←</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7686;">{{ sel.tag }} &nbsp;·&nbsp; {{ sel.pctLabel }} LIKELY</div>
+        </div>
+
+        <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(30px, 6vw, 44px); letter-spacing: -.02em; margin: 20px 0 0; line-height: 1;">{{ sel.name }}</h1>
+        <p style="font-size: 16px; line-height: 1.55; color: #454B57; margin: 14px 0 0; max-width: 56ch;">{{ sel.what }}</p>
+
+        <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 22px; margin-top: 22px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">WHY IT IS SUSPECTED</div>
+          <div style="display: grid; gap: 9px; margin-top: 12px;">
+            <sc-for list="{{ sel.because }}" as="b" hint-placeholder-count="3">
+              <div style="font-size: 14px; line-height: 1.45; color: #454B57; display: flex; gap: 9px;"><span style="color: #1D4E89; font-weight: 700;">✓</span><span>{{ b.t }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background: #1D4E89; color: #FBFCFD; border-radius: 16px; padding: 22px; margin-top: 12px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; opacity: .75;">CONFIRM IT WITH</div>
+          <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; margin-top: 8px;">{{ sel.test }}</div>
+          <div style="font-size: 14px; line-height: 1.5; opacity: .88; margin-top: 8px;">{{ sel.testNote }}</div>
+        </div>
+
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: #6E7686; margin: 30px 0 12px;">STANDARD TREATMENT — KENYA MOH GUIDELINE</div>
+        <div style="display: grid; gap: 10px;">
+          <sc-for list="{{ sel.meds }}" as="med" hint-placeholder-count="2">
+            <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 20px;">
+              <div style="display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap;">
+                <div style="font-weight: 700; font-size: 17px;">{{ med.name }}</div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #C2571A;">{{ med.role }}</div>
+              </div>
+              <div style="font-size: 13px; color: #6E7686; margin-top: 4px;">also sold as {{ med.brands }}</div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 16px;">
+                <div style="background: #E4E8EF; border-radius: 10px; padding: 11px 13px;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .1em; color: #6E7686;">DOSE</div>
+                  <div style="font-size: 13px; font-weight: 600; margin-top: 3px; line-height: 1.35;">{{ med.dose }}</div>
+                </div>
+                <div style="background: #E4E8EF; border-radius: 10px; padding: 11px 13px;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .1em; color: #6E7686;">COURSE</div>
+                  <div style="font-size: 13px; font-weight: 600; margin-top: 3px; line-height: 1.35;">{{ med.course }}</div>
+                </div>
+                <div style="background: #E4E8EF; border-radius: 10px; padding: 11px 13px;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .1em; color: #6E7686;">TYPICAL PRICE</div>
+                  <div style="font-size: 13px; font-weight: 600; margin-top: 3px; line-height: 1.35;">{{ med.price }}</div>
+                </div>
+              </div>
+              <div style="font-size: 13px; color: #454B57; line-height: 1.5; margin-top: 13px;">{{ med.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background: #FBFCFD; border: 2px solid #C2571A; border-radius: 16px; padding: 22px; margin-top: 12px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #C2571A;">PHARMACY CHECK — QUESTION IT IF YOU ARE GIVEN</div>
+          <div style="display: grid; gap: 9px; margin-top: 12px;">
+            <sc-for list="{{ sel.wrong }}" as="w" hint-placeholder-count="2">
+              <div style="font-size: 14px; line-height: 1.45; color: #454B57; display: flex; gap: 9px;"><span style="color: #C2571A; font-weight: 700;">✕</span><span>{{ w.t }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div onClick="{{ goDoctors }}" style="margin: 20px 0 0; background: #C2571A; color: #FBFCFD; border-radius: 14px; padding: 17px; font-weight: 600; font-size: 15px; text-align: center; cursor: pointer;" style-hover="transform: translateY(-2px);">Find a clinic that can test for this →</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDoctors }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 24px 0 0; animation: dcRise .4s ease both;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div onClick="{{ goResults }}" style="width: 38px; height: 38px; border-radius: 10px; border: 1px solid #DDE2EA; background: #FBFCFD; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex: none;" style-hover="border-color: #1D4E89;">←</div>
+          <div>
+            <div style="font-weight: 600; font-size: 15px;">Clinics near you</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7686;">{{ locLine }}</div>
+          </div>
+        </div>
+
+        <sc-if value="{{ locDenied }}" hint-placeholder-val="{{ false }}">
+          <div style="background: #FBFCFD; border: 1px dashed #BFC8D6; border-radius: 16px; padding: 20px; margin-top: 16px;">
+            <div style="font-weight: 600; font-size: 15px;">Location off — searching by area instead</div>
+            <div style="font-size: 14px; color: #454B57; line-height: 1.5; margin-top: 6px;">Declining location never blocks the search. Results below are for the area you typed: <strong>Kilimani, Nairobi</strong>.</div>
+          </div>
+        </sc-if>
+
+        <div style="position: relative; margin: 16px 0 0; height: 220px; border-radius: 16px; overflow: hidden; border: 1px solid #DDE2EA; background: repeating-linear-gradient(135deg, #E1E6EE 0 9px, #EDEFF3 9px 18px);">
+          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7686; letter-spacing: .1em;">MAP VIEW — 4 FACILITIES WITHIN 3 KM</div>
+          <sc-for list="{{ pins }}" as="p" hint-placeholder-count="4">
+            <div style="position: absolute; left: {{ p.x }}; top: {{ p.y }}; width: 30px; height: 30px; border-radius: 50%; background: {{ p.bg }}; color: #FBFCFD; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; box-shadow: 0 3px 10px rgba(23,26,31,.25);">{{ p.n }}</div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; align-items: center;">
+          <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+            <div onClick="{{ f.pick }}" style="background: {{ f.bg }}; color: {{ f.fg }}; border: 1px solid {{ f.border }}; border-radius: 999px; padding: 9px 15px; font-size: 13px; cursor: pointer;">{{ f.label }}</div>
+          </sc-for>
+          <div onClick="{{ toggleLoc }}" style="margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #1D4E89; cursor: pointer; text-decoration: underline;">{{ locToggleLabel }}</div>
+        </div>
+
+        <div style="display: grid; gap: 10px; margin-top: 16px;">
+          <sc-for list="{{ clinics }}" as="c" hint-placeholder-count="4">
+            <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 20px;">
+              <div style="display: flex; gap: 14px; align-items: flex-start;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ c.bg }}; color: #FBFCFD; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; flex: none;">{{ c.n }}</div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="font-weight: 700; font-size: 16px;">{{ c.name }}</div>
+                  <div style="font-size: 13px; color: #6E7686; margin-top: 3px;">{{ c.type }} · {{ c.dist }} · {{ c.open }}</div>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 11px;">
+                    <sc-for list="{{ c.badges }}" as="b" hint-placeholder-count="2">
+                      <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .06em; background: #E4E8EF; border: 1px solid #DDE2EA; border-radius: 6px; padding: 5px 8px; color: #454B57;">{{ b.t }}</div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed #DDE2EA; flex-wrap: wrap;">
+                <div style="font-size: 13px; color: #454B57;"><span style="color: #6E7686;">Consult</span> {{ c.price }} &nbsp;·&nbsp; <span style="color: #6E7686;">wait</span> {{ c.wait }}</div>
+                <div onClick="{{ c.book }}" style="background: {{ c.btnBg }}; color: {{ c.btnFg }}; border: 1px solid {{ c.btnBorder }}; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer;">{{ c.btnLabel }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ booked }}" hint-placeholder-val="{{ false }}">
+          <div style="margin: 18px 0 0; background: #1D4E89; color: #FBFCFD; border-radius: 16px; padding: 22px; animation: dcRise .35s ease both;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; opacity: .75;">SLOT HELD FOR 10 MINUTES</div>
+            <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; margin-top: 8px; line-height: 1.15;">{{ bookedName }} — today, 14:40</div>
+            <div style="font-size: 14px; opacity: .9; margin-top: 8px; line-height: 1.5;">Send your assessment ahead so the clinician has your answers before you arrive.</div>
+            <div onClick="{{ goSummary }}" style="margin-top: 16px; background: #FBFCFD; color: #1D4E89; border-radius: 12px; padding: 14px; font-weight: 600; font-size: 15px; text-align: center; cursor: pointer;">Review and send summary →</div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSummary }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 24px 0 0; animation: dcRise .4s ease both;">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div onClick="{{ goResults }}" style="width: 38px; height: 38px; border-radius: 10px; border: 1px solid #DDE2EA; background: #FBFCFD; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; flex: none;" style-hover="border-color: #1D4E89;">←</div>
+            <div style="font-weight: 600; font-size: 15px;">Clinician summary</div>
+          </div>
+          <div style="display: flex; gap: 4px; background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 999px; padding: 3px;">
+            <sc-for list="{{ noteLangs }}" as="n" hint-placeholder-count="2">
+              <div onClick="{{ n.pick }}" style="background: {{ n.bg }}; color: {{ n.fg }}; border-radius: 999px; padding: 6px 13px; font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: pointer;">{{ n.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 18px; padding: 26px; margin-top: 18px;">
+          <div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; border-bottom: 1px solid #DDE2EA; padding-bottom: 16px;">
+            <div>
+              <img src="afyalink-ink.svg" alt="AfyaLink" style="height: 28px; width: auto; display: block; margin-bottom: 14px;" />
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px;">Amina Wanjiru, 28 F</div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7686; margin-top: 4px;">REF AFC-2609-114 · 02 SEPT 2026, 13:58</div>
+            </div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #C2571A;">URGENCY 3/5</div>
+          </div>
+
+          <div style="display: grid; gap: 18px; margin-top: 18px;">
+            <sc-for list="{{ noteSections }}" as="s" hint-placeholder-count="4">
+              <div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: {{ s.tone }};">{{ s.label }}</div>
+                <div style="font-size: 15px; line-height: 1.55; color: #171A1F; margin-top: 6px;">{{ s.body }}</div>
+              </div>
+            </sc-for>
+
+            <div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">DIFFERENTIAL — ESTIMATED</div>
+              <div style="display: grid; gap: 8px; margin-top: 10px;">
+                <sc-for list="{{ diagnoses }}" as="d" hint-placeholder-count="4">
+                  <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #454B57; width: 42px; flex: none;">{{ d.pctLabel }}</div>
+                    <div style="display: flex; gap: 3px; flex: none;">
+                      <sc-for list="{{ d.dots }}" as="dot" hint-placeholder-count="10">
+                        <span style="width: 10px; height: 10px; border-radius: 2px; background: {{ dot.bg }};"></span>
+                      </sc-for>
+                    </div>
+                    <div style="font-size: 14px;">{{ d.name }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; color: #6E7686; line-height: 1.5; margin-top: 14px; font-family: 'JetBrains Mono', monospace;">Generated from a patient-answered interview. Percentages are prevalence-weighted estimates, not diagnostic. Clinical judgement overrides this document.</div>
+
+        <div style="display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap;">
+          <div onClick="{{ sendSummary }}" style="flex: 1; min-width: 200px; background: {{ sendBg }}; color: #FBFCFD; border-radius: 14px; padding: 17px; font-weight: 600; font-size: 15px; text-align: center; cursor: pointer;" style-hover="transform: translateY(-2px);">{{ sendLabel }}</div>
+          <div onClick="{{ goHome }}" style="flex: 1; min-width: 200px; background: #FBFCFD; border: 1px solid #BFC8D6; border-radius: 14px; padding: 17px; font-weight: 600; font-size: 15px; text-align: center; cursor: pointer;" style-hover="border-color: #1D4E89;">Back to home</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCallback }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 26px 0 0; animation: dcRise .4s ease both; max-width: 640px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div onClick="{{ goResults }}" style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid #DDE2EA; background: #FBFCFD; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: none;" style-hover="border-color: #1D4E89;">←</div>
+          <div style="font-weight: 600; font-size: 15px;">Speak to a clinician</div>
+        </div>
+
+        <div style="background: #1D4E89; color: #FBFCFD; border-radius: 18px; padding: 26px; margin-top: 18px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; opacity: .75;">A REAL PERSON — NOT THE AI</div>
+          <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; margin-top: 8px; line-height: 1.1;">A licensed clinician will call you back.</div>
+          <div style="font-size: 15px; line-height: 1.55; opacity: .9; margin-top: 10px;">They see your assessment before dialling, so the call starts with your symptoms already on screen — not with you repeating them.</div>
+        </div>
+
+        <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 22px; margin-top: 12px;">
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">WHAT THEY WILL SEE</div>
+          <div onClick="{{ toggleShare }}" style="margin-top: 14px; display: flex; gap: 13px; align-items: flex-start; cursor: pointer;">
+            <div style="width: 22px; height: 22px; border-radius: 6px; flex: none; border: 2px solid {{ shareBorder }}; background: {{ shareFill }}; color: #FBFCFD; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;">{{ shareMark }}</div>
+            <div style="font-size: 14px; line-height: 1.5; color: #454B57;">Share my symptom record and the ranked causes. Unchecked, they get nothing and the call starts from zero.</div>
+          </div>
+          <div style="height: 1px; background: #DDE2EA; margin: 18px 0;"></div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">CALL ME ON</div>
+          <div style="font-size: 17px; font-weight: 600; margin-top: 8px;">+254 7•• ••• 418 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #1D4E89; font-weight: 400;">VERIFIED</span></div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6E7686; margin-top: 12px; line-height: 1.6;">NO CALL RECORDING · QUEUE POSITION 3 · EST. WAIT 8 MIN · KES 400</div>
+        </div>
+
+        <div onClick="{{ requestCall }}" style="margin: 16px 0 0; background: {{ callBg }}; color: #FBFCFD; border-radius: 14px; padding: 17px; font-weight: 600; font-size: 15px; text-align: center; cursor: pointer;" style-hover="transform: translateY(-2px);">{{ callLabel }}</div>
+        <sc-if value="{{ callRequested }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 12px; background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 14px; padding: 18px; animation: dcRise .35s ease both;">
+            <div style="font-size: 15px; line-height: 1.5;">Callback queued. Dr. Otieno is next in the rota. You can cancel until the phone rings.</div>
+            <div onClick="{{ cancelCall }}" style="margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #C2571A; cursor: pointer; text-decoration: underline;">CANCEL CALLBACK</div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isUssd }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 44px 0 0; animation: dcRise .4s ease both;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .16em; color: #6E7686;">CHANNEL · FEATURE PHONE · *384*77#</div>
+        <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(30px, 5.5vw, 46px); line-height: 1; letter-spacing: -.02em; margin: 14px 0 0;">USSD, for the phone that isn't smart.</h1>
+        <p style="font-size: 16px; line-height: 1.55; color: #454B57; margin: 14px 0 0; max-width: 60ch;">Same interview logic, same triage rules, same treatment reference — squeezed into 182 characters a screen. No smartphone, no data bundle, no account. The full assessment follows by SMS.</p>
+
+        <div style="display: flex; gap: 18px; overflow-x: auto; padding: 30px 0 14px;">
+          <sc-for list="{{ ussdScreens }}" as="u" hint-placeholder-count="8">
+            <div style="flex: none; width: 214px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; color: #6E7686; margin-bottom: 9px;">{{ u.step }}</div>
+              <div style="background: #171A1F; border-radius: 22px; padding: 12px; box-shadow: 0 10px 26px rgba(23,26,31,.14);">
+                <div style="background: {{ u.screenBg }}; border-radius: 12px; padding: 16px 14px; min-height: 214px; display: flex; flex-direction: column;">
+                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 12.5px; line-height: 1.55; color: {{ u.screenFg }}; white-space: pre-wrap; flex: 1;">{{ u.body }}</div>
+                  <div style="border-top: 1px solid {{ u.divider }}; margin-top: 12px; padding-top: 9px; display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: {{ u.metaFg }};">
+                    <span>Cancel</span><span>{{ u.action }}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="font-size: 12.5px; color: #6E7686; line-height: 1.45; margin-top: 11px;">{{ u.note }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 14px;">
+          <sc-for list="{{ ussdRules }}" as="r" hint-placeholder-count="3">
+            <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 14px; padding: 18px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; color: #C2571A;">{{ r.k }}</div>
+              <div style="font-size: 14px; line-height: 1.5; color: #454B57; margin-top: 8px;">{{ r.v }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isWhatsapp }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 44px 0 0; animation: dcRise .4s ease both;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .16em; color: #6E7686;">CHANNEL · WHATSAPP BUSINESS · +254 20 AFYA</div>
+        <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(30px, 5.5vw, 46px); line-height: 1; letter-spacing: -.02em; margin: 14px 0 0;">The whole thing, in a thread.</h1>
+        <p style="font-size: 16px; line-height: 1.55; color: #454B57; margin: 14px 0 0; max-width: 60ch;">The same interview, ranked causes and treatment reference — delivered where most patients already are. Quick-reply buttons carry the structured questions; free text and Sheng normalise into the same symptom record.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; align-items: start; margin-top: 28px;">
+          <div style="background: #171A1F; border-radius: 30px; padding: 12px;">
+            <div style="background: #E4E8EF; border-radius: 22px; overflow: hidden;">
+              <div style="background: #1D4E89; padding: 14px 16px; display: flex; align-items: center; gap: 12px;">
+                <img src="afyalink-light.svg" alt="AfyaLink" style="height: 24px; width: auto; display: block; flex: none;" />
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #FBFCFD; opacity: .75;">AUTOMATED · BUSINESS ACCOUNT</div>
+              </div>
+              <div style="padding: 16px 14px; display: flex; flex-direction: column; gap: 9px; min-height: 470px;">
+                <sc-for list="{{ waMessages }}" as="w" hint-placeholder-count="6">
+                  <div style="display: flex; justify-content: {{ w.align }};">
+                    <div style="max-width: 84%; background: {{ w.bg }}; color: {{ w.fg }}; border-radius: {{ w.radius }}; padding: 10px 13px; font-size: 13.5px; line-height: 1.45; box-shadow: 0 1px 2px rgba(23,26,31,.08); white-space: pre-wrap;">{{ w.text }}</div>
+                  </div>
+                </sc-for>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                  <sc-for list="{{ waButtons }}" as="b" hint-placeholder-count="3">
+                    <div style="background: #FBFCFD; border: 1px solid #BFC8D6; border-radius: 8px; padding: 8px 12px; font-size: 12.5px; color: #1D4E89; font-weight: 500;">{{ b.t }}</div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; gap: 12px;">
+            <sc-for list="{{ waNotes }}" as="n" hint-placeholder-count="4">
+              <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 20px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; color: #C2571A;">{{ n.k }}</div>
+                <div style="font-size: 14px; line-height: 1.55; color: #454B57; margin-top: 8px;">{{ n.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+      <div style="padding: 44px 0 0; animation: dcRise .4s ease both;">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .16em; color: #6E7686;">OPT-IN · YOUR RECORD, YOUR CONTROL</div>
+        <h1 style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(30px, 5.5vw, 46px); line-height: 1; letter-spacing: -.02em; margin: 14px 0 0;">Check on me.</h1>
+        <p style="font-size: 16px; line-height: 1.55; color: #454B57; margin: 14px 0 0; max-width: 58ch;">Treatment only works if it works. Opt in and AfyaLink follows up while you are on the course — and tells you when getting better has stalled.</p>
+
+        <div style="background: #FBFCFD; border: 2px solid {{ profileBorder }}; border-radius: 18px; padding: 24px; margin-top: 24px;">
+          <div onClick="{{ toggleProfile }}" style="display: flex; gap: 14px; align-items: flex-start; cursor: pointer;">
+            <div style="width: 24px; height: 24px; border-radius: 7px; flex: none; border: 2px solid {{ profileBorder }}; background: {{ profileFill }}; color: #FBFCFD; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700;">{{ profileMark }}</div>
+            <div>
+              <div style="font-weight: 700; font-size: 16px;">Save this assessment and follow up with me.</div>
+              <div style="font-size: 14px; color: #6E7686; line-height: 1.5; margin-top: 6px;">Nothing is saved unless you tick this. Withdraw any time — it stops future check-ins immediately.</div>
+            </div>
+          </div>
+        </div>
+
+        <sc-if value="{{ profileOn }}" hint-placeholder-val="{{ false }}">
+          <div style="animation: dcRise .35s ease both;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .14em; color: #6E7686; margin: 30px 0 12px;">CHECK IN WITH ME</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <sc-for list="{{ cadences }}" as="c" hint-placeholder-count="3">
+                <div onClick="{{ c.pick }}" style="background: {{ c.bg }}; color: {{ c.fg }}; border: 1px solid {{ c.border }}; border-radius: 999px; padding: 10px 17px; font-size: 14px; cursor: pointer;">{{ c.label }}</div>
+              </sc-for>
+            </div>
+
+            <div style="background: #C2571A; color: #FBFCFD; border-radius: 16px; padding: 22px; margin-top: 20px;">
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; opacity: .8;">TODAY'S CHECK-IN · DAY 3 OF COARTEM</div>
+              <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; margin-top: 8px; line-height: 1.15;">Is the fever gone?</div>
+              <div style="font-size: 14px; line-height: 1.5; opacity: .92; margin-top: 8px;">If fever is still there after the full course, that is a reason to go back — not to buy a second course.</div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px;">
+                <sc-for list="{{ checkinOptions }}" as="o" hint-placeholder-count="3">
+                  <div onClick="{{ o.pick }}" style="background: {{ o.bg }}; color: {{ o.fg }}; border: 1px solid {{ o.border }}; border-radius: 10px; padding: 11px 16px; font-size: 14px; font-weight: 600; cursor: pointer;">{{ o.label }}</div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ checkinAnswered }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top: 16px; background: rgba(251,252,253,.16); border-radius: 12px; padding: 14px 16px; font-size: 14px; line-height: 1.5; animation: dcRise .3s ease both;">{{ checkinReply }}</div>
+              </sc-if>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 12px;">
+              <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 22px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">TEMPERATURE, LAST 7 CHECK-INS</div>
+                <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; margin-top: 10px; line-height: 1.2;">Peaked 39.2 °C, now 37.1 °C.</div>
+                <div style="display: flex; gap: 5px; margin-top: 16px; align-items: flex-end; height: 80px;">
+                  <sc-for list="{{ trend }}" as="t" hint-placeholder-count="7">
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                      <div style="width: 100%; border-radius: 4px 4px 0 0; background: {{ t.bg }}; height: {{ t.h }};"></div>
+                      <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #6E7686;">{{ t.d }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="font-size: 13px; color: #6E7686; line-height: 1.5; margin-top: 14px;">Your own readings, entered at each check-in. Orange bars are above 38 °C.</div>
+              </div>
+
+              <div style="background: #FBFCFD; border: 1px solid #DDE2EA; border-radius: 16px; padding: 22px;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: #6E7686;">ADHERENCE</div>
+                <div style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; margin-top: 8px; color: #1D4E89;">5 / 6</div>
+                <div style="font-size: 14px; color: #454B57; line-height: 1.5; margin-top: 6px;">Doses of the artemether–lumefantrine course logged. One evening dose missed on day 2 — finish all six or the parasite can come back.</div>
+                <div style="height: 1px; background: #DDE2EA; margin: 18px 0;"></div>
+                <div style="display: grid; gap: 10px;">
+                  <sc-for list="{{ profileActions }}" as="a" hint-placeholder-count="3">
+                    <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; font-size: 14px;">
+                      <span style="color: #454B57;">{{ a.k }}</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #1D4E89; cursor: pointer; text-decoration: underline; flex: none;">{{ a.v }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;likelihoodStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dots&quot;,&quot;bars&quot;],&quot;default&quot;:&quot;dots&quot;,&quot;tsType&quot;:&quot;'dots'|'bars'&quot;,&quot;section&quot;:&quot;Assessment&quot;},&quot;showConfidenceMeter&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Interview&quot;},&quot;showFactPanel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Interview&quot;}}">
+const T = {
+  en: {
+    interviewTitle: "Symptom interview",
+    chipHint: "TAP AN ANSWER, OR TYPE",
+    typePlaceholder: "Type your own answer…",
+    assessCta: "See the assessment →",
+    closing: [
+      "That is enough to work with. Two answers carry most of the weight: the timing of your Kisumu travel and the fever coming in waves with rigors.",
+      "I have ranked four possible causes and checked how urgent this is. Nothing here replaces a test — and one of these needs a test today."
+    ]
+  },
+  sw: {
+    interviewTitle: "Mahojiano ya dalili",
+    chipHint: "GUSA JIBU, AU ANDIKA",
+    typePlaceholder: "Andika jibu lako…",
+    assessCta: "Ona tathmini →",
+    closing: [
+      "Hiyo inatosha. Majibu mawili ni muhimu zaidi: safari yako ya Kisumu na homa inayokuja kwa mawimbi na kutetemeka.",
+      "Nimepanga sababu nne zinazowezekana na kuangalia uharaka wake. Hii haibadilishi kipimo — na moja kati ya hizi inahitaji kipimo leo."
+    ]
+  }
+};
+
+const SCRIPT = [
+  { en: { q: "Describe what is going on. Take your time — you can tap an option or type your own words.",
+          chips: ["Fever and headache", "Cough and chest pain", "Stomach pain", "Rash on my skin"],
+          a: "Fever and a bad headache for about three days now." },
+    sw: { q: "Eleza kinachoendelea. Chukua muda wako — unaweza kugusa chaguo au kuandika kwa maneno yako.",
+          chips: ["Homa na kichwa", "Kikohozi na kifua", "Maumivu ya tumbo", "Vipele ngozini"],
+          a: "Homa na kichwa kinauma sana kwa siku tatu sasa." },
+    facts: [{ concept: "PRESENTING", value: "Fever + headache, 3 days", status: "REPORTED", tone: "#1D4E89" }] },
+  { en: { q: "How high has the fever gone, and does it stay steady or come and go?",
+          chips: ["Comes in waves with chills", "Stays steady all day", "I haven't measured it"],
+          a: "It comes in waves with shaking chills — highest reading was 39.2 °C last night." },
+    sw: { q: "Homa imefika kiasi gani, na inakaa vilevile au inakuja na kwenda?",
+          chips: ["Inakuja kwa mawimbi na baridi", "Inakaa vilevile", "Sijapima"],
+          a: "Inakuja kwa mawimbi na kutetemeka — kipimo cha juu kilikuwa 39.2 °C usiku." },
+    facts: [
+      { concept: "FEVER PATTERN", value: "Intermittent, with rigors", status: "REPORTED", tone: "#1D4E89" },
+      { concept: "TEMPERATURE", value: "39.2 °C peak, self-measured", status: "MEASURED", tone: "#C2571A" }] },
+  { en: { q: "Have you travelled outside Nairobi in the last three weeks?",
+          chips: ["Yes — Kisumu / lake region", "Yes — the coast", "No travel"],
+          a: "Yes, I was in Kisumu ten days ago. I didn't sleep under a net." },
+    sw: { q: "Umesafiri nje ya Nairobi katika wiki tatu zilizopita?",
+          chips: ["Ndiyo — Kisumu", "Ndiyo — pwani", "Sijasafiri"],
+          a: "Ndiyo, nilikuwa Kisumu siku kumi zilizopita. Sikulala chini ya neti." },
+    facts: [{ concept: "TRAVEL", value: "Kisumu, 10 days ago, no bed net", status: "REPORTED", tone: "#1D4E89" }] },
+  { en: { q: "Any of these with the fever: vomiting, abdominal pain, diarrhoea, or pain when passing urine?",
+          chips: ["Mild abdominal pain only", "Vomiting", "Diarrhoea", "None of those"],
+          a: "Just mild pain in the upper stomach. No vomiting, no diarrhoea, no pain passing urine." },
+    sw: { q: "Kuna lolote pamoja na homa: kutapika, maumivu ya tumbo, kuhara, au maumivu wakati wa kukojoa?",
+          chips: ["Maumivu kidogo ya tumbo", "Kutapika", "Kuhara", "Hakuna"],
+          a: "Maumivu kidogo tu tumbo la juu. Sijatapika, sijaharisha, hakuna maumivu ya kukojoa." },
+    facts: [
+      { concept: "ASSOCIATED", value: "Mild epigastric pain; poor appetite", status: "REPORTED", tone: "#1D4E89" },
+      { concept: "DENIED", value: "Vomiting; diarrhoea; dysuria", status: "DENIED", tone: "#6E7686" }] },
+  { en: { q: "Are you pregnant, taking any medication, or living with a condition like diabetes, HIV or sickle cell?",
+          chips: ["None of these", "I might be pregnant", "I take medication daily"],
+          a: "None of those. I'm not pregnant and I take nothing regularly." },
+    sw: { q: "Je, una ujauzito, unatumia dawa, au una hali kama kisukari, HIV au sickle cell?",
+          chips: ["Hakuna", "Huenda nina ujauzito", "Natumia dawa kila siku"],
+          a: "Hakuna. Sina ujauzito na situmii dawa yoyote." },
+    facts: [{ concept: "RISK CONTEXT", value: "Pregnancy, chronic illness, medication all denied", status: "DENIED", tone: "#6E7686" }] },
+  { en: { q: "Last two: night sweats, and muscle or joint aches?",
+          chips: ["Both", "Night sweats only", "Aches only", "Neither"],
+          a: "Both — soaking night sweats and aching all over." },
+    sw: { q: "Mawili ya mwisho: jasho la usiku, na maumivu ya misuli au viungo?",
+          chips: ["Yote mawili", "Jasho la usiku tu", "Maumivu tu", "Hakuna"],
+          a: "Yote mawili — jasho jingi usiku na mwili wote unauma." },
+    facts: [{ concept: "ASSOCIATED", value: "Drenching night sweats; generalised myalgia", status: "REPORTED", tone: "#1D4E89" }] }
+];
+
+const DIAGNOSES = [
+  { name: "Malaria (P. falciparum)", pct: 58, tag: "MOST LIKELY", color: "#C2571A",
+    blurb: "Cyclical fever with rigors 10 days after lake-region travel is the classic pattern; falciparum remains endemic around Kisumu.",
+    drugShort: "Artemether–lumefantrine, after a positive test",
+    what: "A parasite infection spread by night-biting Anopheles mosquitoes. It is treatable and usually resolves fully — but untreated falciparum malaria can become severe within days, which is why the test is not optional.",
+    test: "Malaria rapid diagnostic test (RDT)",
+    testNote: "Result in 15–20 minutes, KES 200–500 at most clinics and many pharmacies with a lab. A thick and thin blood smear is the alternative and also tells the clinician the parasite load.",
+    because: [
+      { t: "Travel to a high-transmission zone 10 days ago — inside the 7–30 day incubation window." },
+      { t: "Fever coming in waves with rigors, rather than a steady temperature." },
+      { t: "Night sweats plus generalised myalgia with no localising signs." },
+      { t: "No cough, sore throat, dysuria or rash to point elsewhere." }
+    ],
+    meds: [
+      { name: "Artemether–lumefantrine 20/120 mg", role: "FIRST LINE", brands: "Coartem, Lumartem, Artefan",
+        dose: "4 tablets per dose, twice daily", course: "3 days — 6 doses total", price: "KES 200–450 per course",
+        note: "Take with milk or a fatty meal — absorption drops sharply on an empty stomach. Finish the whole course even once the fever breaks. Second dose is 8 hours after the first, then morning and evening." },
+      { name: "Paracetamol 500 mg", role: "SYMPTOM RELIEF", brands: "Panadol, Hedex",
+        dose: "1 g (2 tablets) every 6–8 hours", course: "As needed, max 4 g in 24 h", price: "KES 20–80",
+        note: "For fever and headache. Avoid ibuprofen and aspirin until malaria is ruled out or treated — they carry bleeding risk if platelets are low." }
+    ],
+    wrong: [
+      { t: "An antibiotic (amoxicillin, azithromycin, metronidazole) as the malaria treatment — antibiotics do not treat malaria." },
+      { t: "Chloroquine or SP/Fansidar — no longer effective first-line treatment in Kenya due to resistance." },
+      { t: "Artemisinin on its own (artesunate or artemether monotherapy) for uncomplicated malaria — it must be a combination." },
+      { t: "Any antimalarial handed over with no test done, or a test the pharmacy 'doesn't need to run'." }
+    ] },
+  { name: "Typhoid (enteric fever)", pct: 19, tag: "CONSIDER", color: "#1D4E89",
+    blurb: "Sustained fever with upper abdominal discomfort and poor appetite fits, though the rigors pattern fits malaria better.",
+    drugShort: "Azithromycin, only after a blood culture",
+    what: "A Salmonella Typhi infection from contaminated food or water. Fever typically climbs stepwise over a week and comes with headache, abdominal discomfort and constipation more often than diarrhoea.",
+    test: "Blood culture (not the Widal test)",
+    testNote: "Blood culture is the reliable test, KES 1,500–3,500, results in 2–3 days. The Widal test is widely sold in Kenya and frequently gives false positives — a Widal result alone should not start a 7-day antibiotic course.",
+    because: [
+      { t: "Fever lasting more than 3 days with mild epigastric pain." },
+      { t: "Marked loss of appetite and headache." },
+      { t: "Travel with likely street food and water exposure." }
+    ],
+    meds: [
+      { name: "Azithromycin 500 mg", role: "FIRST LINE", brands: "Zithromax, Azithral",
+        dose: "500 mg once daily", course: "7 days", price: "KES 350–900 per course",
+        note: "Preferred where fluoroquinolone resistance is common, as in East Africa. Only start once culture supports it — or on a clinician's decision if you are deteriorating." },
+      { name: "Ceftriaxone 1–2 g IV", role: "IF SEVERE", brands: "Rocephin",
+        dose: "Clinician-administered", course: "10–14 days", price: "Inpatient",
+        note: "For confirmed severe or complicated enteric fever. Not an outpatient self-treatment." }
+    ],
+    wrong: [
+      { t: "A 7-day antibiotic course based on a Widal test alone." },
+      { t: "Ciprofloxacin as an automatic first choice — regional resistance is high." },
+      { t: "Stopping the course early because the fever settled on day 3 — relapse is common." }
+    ] },
+  { name: "Influenza-like viral illness", pct: 14, tag: "POSSIBLE", color: "#1D4E89",
+    blurb: "Fever, aches and headache are consistent, but three days without any respiratory symptom makes this less likely.",
+    drugShort: "None — supportive care only",
+    what: "A self-limiting viral infection. It runs 3–7 days and resolves without specific treatment. It is on the list mainly because it is common and because ruling it in would only be safe once malaria is excluded.",
+    test: "Diagnosis of exclusion",
+    testNote: "No test needed. It becomes the working answer if the malaria test is negative, the fever settles by day 5, and no new signs appear.",
+    because: [
+      { t: "Fever with generalised muscle aches and headache." },
+      { t: "No focal signs on the answers given." }
+    ],
+    meds: [
+      { name: "Paracetamol 500 mg", role: "SUPPORTIVE", brands: "Panadol, Hedex",
+        dose: "1 g every 6–8 hours", course: "3–5 days as needed", price: "KES 20–80",
+        note: "Fever and aches only. Fluids and rest do the rest of the work." },
+      { name: "Oral rehydration salts", role: "SUPPORTIVE", brands: "ORS sachets",
+        dose: "1 sachet in 1 L water", course: "While febrile", price: "KES 20–50",
+        note: "Sweating with fever loses more salt than water alone replaces." }
+    ],
+    wrong: [
+      { t: "Any antibiotic — viral illness does not respond to them and the course adds resistance risk." },
+      { t: "An antimalarial 'just in case' without a test." },
+      { t: "A steroid injection to 'bring the fever down fast'." }
+    ] },
+  { name: "Urinary tract infection", pct: 9, tag: "LESS LIKELY", color: "#6E7686",
+    blurb: "Kept on the list because fever in a young woman warrants a urinalysis, but there is no dysuria or flank pain reported.",
+    drugShort: "Nitrofurantoin, only if urinalysis is positive",
+    what: "A bacterial infection of the bladder or, with fever and flank pain, the kidney. Included as a cheap thing to rule out rather than a strong candidate here.",
+    test: "Urinalysis and dipstick",
+    testNote: "KES 150–400, results the same visit. Negative leucocytes and nitrites take this off the list.",
+    because: [
+      { t: "Fever without an obvious source in a woman of reproductive age." },
+      { t: "Mild lower abdominal discomfort reported." }
+    ],
+    meds: [
+      { name: "Nitrofurantoin 100 mg", role: "FIRST LINE (SIMPLE UTI)", brands: "Macrobid, Furadantin",
+        dose: "100 mg twice daily", course: "5 days", price: "KES 150–400",
+        note: "For bladder infection only. Not suitable if the kidney is involved — fever plus flank pain needs a different antibiotic." }
+    ],
+    wrong: [
+      { t: "A single-dose antibiotic 'shot' with no urine test." },
+      { t: "Nitrofurantoin for a fever with flank pain — it does not reach kidney tissue." }
+    ] }
+];
+
+const CLINICS = [
+  { n: 1, name: "Kilimani Family Health Centre", type: "Level 3 clinic", dist: "0.8 km", open: "open until 20:00",
+    badges: ["ON-SITE LAB", "MALARIA RDT", "SHIF ACCEPTED"], price: "KES 1,000", wait: "~15 min", bg: "#C2571A" },
+  { n: 2, name: "Yaya Diagnostic & GP Practice", type: "GP + laboratory", dist: "1.4 km", open: "open 24 hours",
+    badges: ["ON-SITE LAB", "BLOOD CULTURE", "CARD PAYMENT"], price: "KES 1,500", wait: "~30 min", bg: "#1D4E89" },
+  { n: 3, name: "Dr. Otieno — Riverside Medical", type: "Private GP", dist: "2.1 km", open: "open until 18:00",
+    badges: ["MALARIA RDT", "SAME-DAY SLOTS"], price: "KES 2,500", wait: "by appointment", bg: "#1D4E89" },
+  { n: 4, name: "Ngong Road Pharmacy & Clinic", type: "Pharmacy with clinical officer", dist: "2.7 km", open: "open until 21:00",
+    badges: ["MALARIA RDT", "DISPENSES COARTEM"], price: "KES 500", wait: "walk-in", bg: "#6E7686" }
+];
+
+const PINS = [
+  { n: 1, x: "22%", y: "58%", bg: "#C2571A" }, { n: 2, x: "48%", y: "26%", bg: "#1D4E89" },
+  { n: 3, x: "70%", y: "62%", bg: "#1D4E89" }, { n: 4, x: "36%", y: "80%", bg: "#6E7686" }
+];
+
+const USSD = [
+  { step: "SCREEN 1 · DIAL", body: "*384*77#\n\nCalling…", note: "No smartphone, no data bundle, no account. Works on any handset on the network.", dark: true, action: "Send" },
+  { step: "SCREEN 2 · DISCLOSURE", body: "AFYALINK\nAI itakuuliza maswali.\nSi daktari. Majibu ni\nmakadirio tu.\nDharura? Piga 999.\n\n1. Endelea\n2. Toka", note: "Short-form disclosure, same version registry as the app. Nothing runs before the user replies 1.", action: "Reply" },
+  { step: "SCREEN 3 · LANGUAGE", body: "Chagua lugha /\nChoose language\n\n1. Kiswahili\n2. English", note: "Language is a session variable. The symptom record underneath is language-neutral, so the assessment is identical either way.", action: "Reply" },
+  { step: "SCREEN 4 · CATEGORY", body: "Dalili kuu ni ipi?\n\n1. Homa\n2. Tumbo\n3. Kifua/kupumua\n4. Kichwa\n5. Nyingine", note: "Menu-driven where free text would be unreliable. The choice selects the same question pathway the app interview uses.", action: "Reply" },
+  { step: "SCREEN 5 · INTERVIEW", body: "Homa imedumu siku\nngapi?\n\n1. Chini ya siku 1\n2. Siku 1-3\n3. Siku 4-7\n4. Zaidi ya wiki", note: "Only the highest-value questions run here — four to six, chosen so the triage rules always have what they need.", action: "Reply" },
+  { step: "SCREEN 6 · TRAVEL", body: "Umesafiri wiki 3\nzilizopita?\n\n1. Kisumu/ziwa\n2. Pwani\n3. Sehemu nyingine\n4. Sijasafiri", note: "The travel question is what moves malaria to the top of the list. On USSD it is asked early and never skipped.", action: "Reply" },
+  { step: "SCREEN 7 · RESULT", body: "Kwa uliyosema:\nMalaria - uwezekano\nMKUBWA (6/10)\nTyphoid - wastani\n\nNENDA UPIMWE LEO.\nUsinunue dawa kabla.\n\n1. Kliniki karibu\n2. Tuma SMS", note: "The same ranked causes and the same urgency, in 182 characters. Likelihood reads as words and a 6-in-10 scale rather than a percentage.", dark: true, action: "Reply" },
+  { step: "SCREEN 8 · SMS", body: "SMS imetumwa.\nInajumuisha dawa\ninayotumika, bei, na\nkliniki 3 karibu.\n\nAsante.\n\n0. Funga", note: "The full assessment — treatment, prices, pharmacy-check list, nearby clinics — arrives by SMS so it survives after the session closes.", action: "OK" }
+];
+
+class Component extends DCLogic {
+  state = { tab: "app", screen: "onboard", lang: "en", noteLang: "en", consent: false, step: 0, phase: "ask", selIdx: 0,
+            locDenied: false, filter: "Has a lab", bookedIdx: -1, share: true, callRequested: false,
+            sent: false, profileOn: false, cadence: "Daily", checkin: "" };
+
+  go = (screen) => { this.setState({ screen }); if (typeof window !== "undefined") window.scrollTo(0, 0); };
+
+  answer = () => {
+    this.setState({ phase: "typing" });
+    setTimeout(() => this.setState((s) => ({ step: s.step + 1, phase: s.step + 1 >= SCRIPT.length ? "done" : "ask" })), 900);
+  };
+
+  buildMessages(t) {
+    const L = this.state.lang;
+    const out = [];
+    const bot = { align: "flex-start", bg: "#FBFCFD", fg: "#171A1F", border: "#DDE2EA", radius: "16px 16px 16px 5px" };
+    const me = { align: "flex-end", bg: "#1D4E89", fg: "#FBFCFD", border: "#1D4E89", radius: "16px 16px 5px 16px" };
+    for (let i = 0; i < SCRIPT.length; i++) {
+      if (i > this.state.step) break;
+      out.push(Object.assign({ text: SCRIPT[i][L].q }, bot));
+      if (i < this.state.step) out.push(Object.assign({ text: SCRIPT[i][L].a }, me));
+    }
+    if (this.state.step >= SCRIPT.length) t.closing.forEach((c) => out.push(Object.assign({ text: c }, bot)));
+    return out;
+  }
+
+  decorate(d, i) {
+    const filled = Math.round(d.pct / 10);
+    return Object.assign({}, d, {
+      pctLabel: d.pct + "%",
+      dotLabel: filled + " in 10 likely",
+      dots: Array.from({ length: 10 }, (_, k) => ({ bg: k < filled ? d.color : "#DDE2EA" })),
+      open: () => { this.setState({ selIdx: i }); this.go("detail"); }
+    });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const t = T[s.lang];
+    const style = this.props.likelihoodStyle ?? "dots";
+    const diagnoses = DIAGNOSES.map((d, i) => this.decorate(d, i));
+    const asking = s.phase === "ask" && s.step < SCRIPT.length;
+    const sc = SCRIPT[Math.min(s.step, SCRIPT.length - 1)][s.lang];
+    const facts = SCRIPT.slice(0, s.step).flatMap((x) => x.facts);
+    const pill = (on) => ({ bg: on ? "#171A1F" : "#FBFCFD", fg: on ? "#EDEFF3" : "#454B57", border: on ? "#171A1F" : "#BFC8D6" });
+
+    return {
+      tabs: [["app", "Patient app"], ["ussd", "USSD"], ["whatsapp", "WhatsApp"], ["profile", "Follow-up"]].map(([k, label]) =>
+        Object.assign({ label, pick: () => { this.setState({ tab: k }); window.scrollTo(0, 0); } }, pill(s.tab === k))),
+      langs: [["en", "EN"], ["sw", "SW"]].map(([k, label]) => ({
+        label, bg: s.lang === k ? "#1D4E89" : "transparent", fg: s.lang === k ? "#FBFCFD" : "#6E7686",
+        pick: () => this.setState({ lang: k }) })),
+      noteLangs: [["en", "EN"], ["sw", "SW"]].map(([k, label]) => ({
+        label, bg: s.noteLang === k ? "#1D4E89" : "transparent", fg: s.noteLang === k ? "#FBFCFD" : "#6E7686",
+        pick: () => this.setState({ noteLang: k }) })),
+
+      isUssd: s.tab === "ussd", isWhatsapp: s.tab === "whatsapp", isProfile: s.tab === "profile",
+      isOnboard: s.tab === "app" && s.screen === "onboard",
+      isHome: s.tab === "app" && s.screen === "home",
+      isChat: s.tab === "app" && s.screen === "chat",
+      isTriage: s.tab === "app" && s.screen === "triage",
+      isResults: s.tab === "app" && s.screen === "results",
+      isDetail: s.tab === "app" && s.screen === "detail",
+      isDoctors: s.tab === "app" && s.screen === "doctors",
+      isSummary: s.tab === "app" && s.screen === "summary",
+      isCallback: s.tab === "app" && s.screen === "callback",
+
+      goBrandHome: () => { this.setState({ tab: "app", screen: s.consent ? "home" : "onboard" }); window.scrollTo(0, 0); },
+      goHome: () => this.go("home"), goChat: () => this.go("chat"), goTriage: () => this.go("triage"),
+      goResults: () => this.go("results"), goDoctors: () => this.go("doctors"), goSummary: () => this.go("summary"),
+      goCallback: () => this.go("callback"),
+
+      onboardPoints: [
+        { n: "01", title: "It asks until it is sure", body: "Follow-up questions continue until the picture is specific enough to rank causes." },
+        { n: "02", title: "You see the expected treatment", body: "So you can check that what the pharmacy or clinic hands you makes sense." },
+        { n: "03", title: "It works without a smartphone", body: "The same interview runs on WhatsApp and on USSD from any handset." },
+        { n: "04", title: "Nothing is sent without you", body: "Your summary reaches a clinician only when you choose to send it." }
+      ],
+      toggleConsent: () => this.setState((p) => ({ consent: !p.consent })),
+      boxBorder: s.consent ? "#1D4E89" : "#BFC8D6",
+      boxFill: s.consent ? "#1D4E89" : "transparent",
+      boxMark: s.consent ? "✓" : "",
+      ctaBg: s.consent ? "#1D4E89" : "#BFC8D6",
+      startFromOnboard: () => { if (s.consent) this.go("home"); },
+
+      history: [
+        { title: "Fever, chills, headache", sub: "Malaria suspected · sent to clinic", date: "TODAY", tone: "#C2571A", open: () => this.go("results") },
+        { title: "Sore throat, 2 days", sub: "Viral pharyngitis · self-care", date: "14 JUL", tone: "#1D4E89", open: () => this.go("results") },
+        { title: "Rash on forearms", sub: "Contact dermatitis · self-care", date: "02 MAY", tone: "#BFC8D6", open: () => this.go("results") }
+      ],
+
+      interviewTitle: t.interviewTitle, chipHint: t.chipHint, typePlaceholder: t.typePlaceholder, assessCta: t.assessCta,
+      messages: this.buildMessages(t),
+      typing: s.phase === "typing",
+      interviewDone: s.step >= SCRIPT.length,
+      hasChips: asking,
+      chips: asking ? sc.chips.map((c) => ({ label: c, pick: this.answer })) : [],
+      showMeter: this.props.showConfidenceMeter ?? true,
+      progressPct: Math.round((Math.min(s.step, SCRIPT.length) / SCRIPT.length) * 100) + "%",
+      progressLabel: s.step >= SCRIPT.length ? "CONFIDENCE SUFFICIENT — ASSESSMENT READY"
+        : "QUESTION " + (s.step + 1) + " OF " + SCRIPT.length + " · CONFIDENCE " + Math.round(15 + (s.step / SCRIPT.length) * 70) + "%",
+      showFacts: this.props.showFactPanel ?? true,
+      facts, noFacts: facts.length === 0,
+      sessionId: "AFC-2609-114",
+      ttl: "30 DAYS",
+
+      urgScale: [0, 1, 2, 3, 4].map((i) => ({ bg: i <= 2 ? "rgba(251,252,253,.95)" : "rgba(251,252,253,.28)" })),
+      whyNot: [
+        { t: "Fever past 72 hours in a malaria-endemic setting needs a parasite test, not a guess." },
+        { t: "The two leading causes need opposite medicines — treating the wrong one wastes days." },
+        { t: "Buying an antimalarial untested is the single most common way falciparum malaria turns severe." }
+      ],
+      redFlags: [
+        { t: "Confusion, drowsiness, or a fit." },
+        { t: "Vomiting everything, or unable to drink." },
+        { t: "Difficulty breathing, or very dark urine." },
+        { t: "Bleeding gums, nosebleed, or new rash that does not fade under pressure." }
+      ],
+      triageRules: [{ t: "FEV-DUR-072 v2.3" }, { t: "MAL-ENDEM-004 v2.3" }, { t: "RIGOR-PATT-011 v2.3" }, { t: "SYNC-EVAL · 9 ms" }],
+
+      diagnoses,
+      useDots: style === "dots",
+      useBars: style === "bars",
+      sel: diagnoses[s.selIdx],
+
+      locLine: s.locDenied ? "LOCATION DENIED · MANUAL AREA SEARCH" : "GPS · KILIMANI, NAIROBI · ±40 m",
+      locDenied: s.locDenied,
+      locToggleLabel: s.locDenied ? "ALLOW LOCATION" : "DENY LOCATION",
+      toggleLoc: () => this.setState((p) => ({ locDenied: !p.locDenied })),
+      pins: PINS,
+      filters: ["Has a lab", "Open now", "Lowest cost"].map((f) =>
+        Object.assign({ label: f, pick: () => this.setState({ filter: f }) }, pill(s.filter === f))),
+      clinics: CLINICS.map((c, i) => Object.assign({}, c, {
+        badges: c.badges.map((b) => ({ t: b })),
+        btnLabel: s.bookedIdx === i ? "Booked ✓" : "Book 14:40",
+        btnBg: s.bookedIdx === i ? "#1D4E89" : "#FBFCFD",
+        btnFg: s.bookedIdx === i ? "#FBFCFD" : "#1D4E89",
+        btnBorder: s.bookedIdx === i ? "#1D4E89" : "#BFC8D6",
+        book: () => this.setState({ bookedIdx: i })
+      })),
+      booked: s.bookedIdx >= 0,
+      bookedName: s.bookedIdx >= 0 ? CLINICS[s.bookedIdx].name : "",
+
+      noteSections: [
+        { label: "PRESENTING COMPLAINT", tone: "#1D4E89", body: s.noteLang === "sw"
+            ? "Homa ya vipindi hadi 39.2 °C na kutetemeka kwa siku 3, maumivu ya kichwa mbele, maumivu ya misuli, jasho la usiku, maumivu kidogo ya tumbo la juu, hamu ya kula imepungua."
+            : "Intermittent fever to 39.2 °C with rigors for 3 days, frontal headache, myalgia, night sweats, mild epigastric discomfort, reduced appetite." },
+        { label: "EXPLICITLY DENIED", tone: "#6E7686", body: s.noteLang === "sw"
+            ? "Kutapika. Kuhara. Maumivu ya kukojoa. Vipele. Ujauzito."
+            : "Vomiting. Diarrhoea. Dysuria. Rash. Pregnancy." },
+        { label: "RELEVANT HISTORY", tone: "#1D4E89", body: s.noteLang === "sw"
+            ? "Alisafiri Kisumu siku 10 zilizopita, hakutumia neti. Hana ujauzito. Hatumii dawa, hana ugonjwa sugu, hana mzio wa dawa."
+            : "Travel to Kisumu 10 days ago, no bed net used. Not pregnant. No regular medication, no known chronic illness, no drug allergies. Last antimalarial > 2 years ago." },
+        { label: "SUGGESTED WORK-UP", tone: "#C2571A", body: s.noteLang === "sw"
+            ? "Kipimo cha malaria (RDT) au smear kwanza. Ikiwa hasi na homa inaendelea baada ya siku 5: blood culture, FBC, urinalysis. Hakuna dawa iliyoanzishwa."
+            : "Malaria RDT or thick/thin blood smear first. If negative and fever persists past day 5: blood culture for enteric fever, FBC, urinalysis. No empirical antimalarial or antibiotic given." }
+      ],
+      sendSummary: () => this.setState({ sent: true }),
+      sendLabel: s.sent ? "Sent to Kilimani Family Health Centre ✓" : "Send to the clinic I booked",
+      sendBg: s.sent ? "#1D4E89" : "#C2571A",
+
+      toggleShare: () => this.setState((p) => ({ share: !p.share })),
+      shareBorder: s.share ? "#1D4E89" : "#BFC8D6",
+      shareFill: s.share ? "#1D4E89" : "transparent",
+      shareMark: s.share ? "✓" : "",
+      requestCall: () => this.setState({ callRequested: true }),
+      cancelCall: () => this.setState({ callRequested: false }),
+      callRequested: s.callRequested,
+      callBg: s.callRequested ? "#1D4E89" : "#C2571A",
+      callLabel: s.callRequested ? "Callback requested ✓" : "Request a callback",
+
+      ussdScreens: USSD.map((u) => ({
+        step: u.step, body: u.body, note: u.note, action: u.action,
+        screenBg: u.dark ? "#1D4E89" : "#E4E8EF",
+        screenFg: u.dark ? "#FBFCFD" : "#171A1F",
+        divider: u.dark ? "rgba(251,252,253,.28)" : "#BFC8D6",
+        metaFg: u.dark ? "rgba(251,252,253,.7)" : "#6E7686"
+      })),
+      ussdRules: [
+        { k: "NO ACCOUNT, NO BUNDLE", v: "The session runs on the network layer, so a patient with KES 0 airtime credit and a 2G handset gets the same ranked assessment as the app." },
+        { k: "TRIAGE RUNS INSTANTLY", v: "Urgency is never queued to a background job — the rules evaluate inside the callback so screen 7 always answers before the session times out." },
+        { k: "SMS CARRIES THE DETAIL", v: "Doses, prices and the pharmacy-check list will not fit in a USSD screen, so they go out as SMS the patient can show at the counter." }
+      ],
+
+      waMessages: [
+        { text: "AfyaLink: an AI will ask you about your symptoms. It is not a doctor and does not replace a test. Emergency? Call 999.\n\nReply START to begin.", who: "bot" },
+        { text: "START", who: "me" },
+        { text: "Karibu. Naweza kuuliza kwa Kiswahili au English — chagua hapa chini.", who: "bot" },
+        { text: "Nina homa na kichwa kinauma tangu juzi, na nilikuwa Kisumu wiki iliyopita", who: "me" },
+        { text: "Asante. Safari ya Kisumu ni muhimu hapa. Homa inakuja kwa mawimbi na kutetemeka, au inakaa vilevile?", who: "bot" },
+        { text: "Inakuja na kutetemeka, hasa usiku", who: "me" },
+        { text: "Nimeandika. Swali moja zaidi kisha nitakupa tathmini na dawa inayotumika kwa kila uwezekano.", who: "bot" }
+      ].map((m) => m.who === "me"
+        ? { text: m.text, align: "flex-end", bg: "#1D4E89", fg: "#FBFCFD", radius: "12px 12px 3px 12px" }
+        : { text: m.text, align: "flex-start", bg: "#FBFCFD", fg: "#171A1F", radius: "12px 12px 12px 3px" }),
+      waButtons: [{ t: "Nimepima joto" }, { t: "Sijapima" }, { t: "Switch to English" }],
+      waNotes: [
+        { k: "ONE INTERVIEW, THREE CHANNELS", v: "WhatsApp calls the same question engine, the same triage rules and the same treatment reference as the app. There is no second version of the medical logic to keep in sync." },
+        { k: "CODE-SWITCHING IS THE NORM", v: "“Nina homa na kichwa kinauma tangu juzi” lands in the record as the same structured fact as its English equivalent — fever + headache, onset 2 days." },
+        { k: "THE ASSESSMENT ARRIVES AS A CARD", v: "At the end of the thread the patient gets the ranked causes, the expected medicine for each, and three nearby clinics — forwardable to a relative or a pharmacist." },
+        { k: "DISCLOSURE EVERY SESSION", v: "An expired thread restarts with the disclosure. Nothing runs before the patient replies START." }
+      ],
+
+      profileOn: s.profileOn,
+      toggleProfile: () => this.setState((p) => ({ profileOn: !p.profileOn })),
+      profileBorder: s.profileOn ? "#1D4E89" : "#BFC8D6",
+      profileFill: s.profileOn ? "#1D4E89" : "transparent",
+      profileMark: s.profileOn ? "✓" : "",
+      cadences: ["Daily", "Every 3 days", "Weekly"].map((c) =>
+        Object.assign({ label: c, pick: () => this.setState({ cadence: c }) }, pill(s.cadence === c))),
+      checkinOptions: ["Gone", "Better, not gone", "Same or worse"].map((o) => ({
+        label: o,
+        bg: s.checkin === o ? "#FBFCFD" : "rgba(251,252,253,.16)",
+        fg: s.checkin === o ? "#C2571A" : "#FBFCFD",
+        border: s.checkin === o ? "#FBFCFD" : "rgba(251,252,253,.5)",
+        pick: () => this.setState({ checkin: o })
+      })),
+      checkinAnswered: s.checkin !== "",
+      checkinReply: s.checkin === "Gone"
+        ? "Good. Still finish all six doses — stopping early is how the parasite comes back a week later."
+        : s.checkin === "Better, not gone"
+        ? "Expected on day 3. Keep going and check again tomorrow. If fever returns after the last dose, go back to the clinic rather than buying a second course."
+        : s.checkin === "Same or worse"
+        ? "That is a reason to be seen again today. Treatment failure and a wrong first assumption look the same from here — a repeat test tells them apart. Kilimani Family Health Centre is 0.8 km away."
+        : "",
+      trend: [
+        { d: "M", v: 39.2 }, { d: "T", v: 38.9 }, { d: "W", v: 38.4 }, { d: "T", v: 38.0 }, { d: "F", v: 37.6 }, { d: "S", v: 37.3 }, { d: "S", v: 37.1 }
+      ].map((x) => ({ d: x.d, h: Math.round(((x.v - 36.5) / 3) * 80) + "px", bg: x.v >= 38 ? "#C2571A" : "#1D4E89" })),
+      profileActions: [
+        { k: "Export everything as PDF", v: "EXPORT" },
+        { k: "Delete this record", v: "DELETE" },
+        { k: "Stop follow-ups", v: "WITHDRAW" }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>

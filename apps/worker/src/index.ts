@@ -9,7 +9,8 @@ import { processFollowups } from "./processors/followups.js";
 import { processNotifications } from "./processors/notifications.js";
 import { processProviderSync } from "./processors/provider-sync.js";
 import { processPurges } from "./processors/purges.js";
-import { processVoiceCallbacks } from "./processors/voice-callbacks.js";
+import { startRecordJobWorkers } from "./processors/record-jobs.js";
+import { processVoiceCallbacks, startVoiceCallbackWorker } from "./processors/voice-callbacks.js";
 import { queueNames } from "./queues.js";
 
 export const processors = {
@@ -35,8 +36,11 @@ log.info(
     queues: queueNames,
     processorCount: Object.keys(processors).length,
   },
-  "worker scaffold started; processors are not implemented",
+  "worker started",
 );
+
+startVoiceCallbackWorker();
+startRecordJobWorkers();
 
 setInterval(() => {
   log.info({ event: "worker_heartbeat" }, "worker idle");

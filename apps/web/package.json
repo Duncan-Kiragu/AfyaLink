@@ -12,6 +12,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@elevenlabs/react": "catalog:",
     "@hookform/resolvers": "catalog:",
     "@kkd/api-client": "workspace:*",
     "@kkd/contracts": "workspace:*",

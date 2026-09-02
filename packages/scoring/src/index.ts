@@ -1,11 +1,11 @@
-import type { SystemScoreSnapshot } from "@kkd/contracts";
-
-export interface ScoreEngine {
-  snapshot(input: unknown): Promise<SystemScoreSnapshot>;
-}
-
-export class UnimplementedScoreEngine implements ScoreEngine {
-  snapshot(_input: unknown): Promise<SystemScoreSnapshot> {
-    return Promise.reject(new Error("@kkd/scoring snapshot is not implemented"));
-  }
-}
+export {
+  DEFAULT_COMPLETENESS_FIELD_IDS,
+  SYSTEM_SCORE_ALGORITHM_VERSION,
+  SystemScoreEngine,
+  assertNonDiagnosticScore,
+  completenessPercent,
+  computeSystemScore,
+  trajectoryFromPoints,
+  uniqueIds,
+  type ScoreEngine,
+} from "./engine.js";

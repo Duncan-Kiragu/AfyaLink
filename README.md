@@ -52,7 +52,7 @@ apps/mcp          MCP HTTP server (Evans + Antonia)
 packages/contracts     Zod schemas — import these, do not fork types
 packages/ai            Claude client abstraction
 packages/clinical-safety
-packages/scoring
+packages/scoring       Non-diagnostic System Score (Duncan / KKD-RECORDS-001)
 packages/pii
 packages/i18n
 packages/integrations  External API adapters

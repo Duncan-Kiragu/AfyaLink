@@ -7,12 +7,14 @@ import type {
   ReportedFacts,
   SafetyAssessment,
 } from "@kkd/contracts";
-import type { SafetyEngine } from "@kkd/clinical-safety";
 import { FakeRedis, asRedis } from "@kkd/testing";
 import type { Redis } from "ioredis";
 import { loadEnv } from "@kkd/config";
 import { createApp } from "../app.js";
-import { createConversationEngine } from "../services/conversation/engine.js";
+import {
+  createConversationEngine,
+  type ConversationSafetyEngine,
+} from "../services/conversation/engine.js";
 import { createSessionStore } from "../services/conversation/session-store.js";
 import { createChannelSessionStore } from "../services/channels/channel-session.js";
 import { createIdempotencyStore } from "../services/channels/idempotency.js";
@@ -82,7 +84,7 @@ export function createStubAi(): StubAi {
   return stub;
 }
 
-export interface StubSafety extends SafetyEngine {
+export interface StubSafety extends ConversationSafetyEngine {
   next: SafetyAssessment;
   fail: boolean;
   calls: number;

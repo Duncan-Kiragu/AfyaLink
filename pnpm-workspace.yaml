@@ -11,6 +11,7 @@ allowBuilds:
   protobufjs: true
 
 catalog:
+  "@elevenlabs/react": "^1.15.0"
   "@anthropic-ai/sdk": "^0.123.0"
   "@hookform/resolvers": "^5.9.1"
   "@modelcontextprotocol/core": "^2.0.0"

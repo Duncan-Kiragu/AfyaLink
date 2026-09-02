@@ -1,14 +1,37 @@
 import type { Redis } from "ioredis";
 import type { ConversationEngine } from "@kkd/contracts";
-import { createAiService } from "@kkd/ai";
-import { UnimplementedSafetyEngine } from "@kkd/clinical-safety";
+import { createAiServiceFromEnv } from "@kkd/ai";
+import {
+  DeterministicSafetyEngine,
+  RED_FLAGS_V0_1_0_DRAFT_VERSION,
+} from "@kkd/clinical-safety";
 import { loadEnv, type Env } from "@kkd/config";
 import { createChannelIdentityHasher, type ChannelIdentityHasher } from "@kkd/integrations/channel";
+import { createPiiServiceFromEnv } from "@kkd/pii";
 import { getRedis } from "./redis.js";
-import { createConversationEngine } from "./conversation/engine.js";
+import {
+  createConversationEngine,
+  type ConversationSafetyEngine,
+} from "./conversation/engine.js";
 import { createSessionStore } from "./conversation/session-store.js";
 import { createChannelSessionStore, type ChannelSessionStore } from "./channels/channel-session.js";
 import { createIdempotencyStore, type IdempotencyStore } from "./channels/idempotency.js";
+
+function safetyForConversation(env: Env): ConversationSafetyEngine {
+  const engine = new DeterministicSafetyEngine({
+    executeUnreviewedDraftRules: env.FEATURE_SEVERITY_UNREVIEWED_DRAFT_RULES,
+  });
+  return {
+    evaluate(session) {
+      return engine.evaluate({
+        symptoms: session.symptoms,
+        facts: session.facts,
+        priorObservations: [],
+        ruleSetVersion: RED_FLAGS_V0_1_0_DRAFT_VERSION,
+      });
+    },
+  };
+}
 
 /**
  * Lazily-built application services.
@@ -82,8 +105,8 @@ export function getChannelContext(): ChannelContext {
     hasher,
     engine: createConversationEngine({
       sessions,
-      ai: createAiService(),
-      safety: new UnimplementedSafetyEngine(),
+      ai: createAiServiceFromEnv(env, createPiiServiceFromEnv(env)),
+      safety: safetyForConversation(env),
     }),
     channelSessions: createChannelSessionStore(redis, {
       ttlSeconds: env.CHANNEL_SESSION_TTL_SECONDS,

@@ -4,6 +4,7 @@ import {
   isSupportedLocale,
   missingKeys,
   resolveLocale,
+  resources,
   safetyCriticalKeys,
   supportedLocales,
   t,
@@ -24,6 +25,12 @@ describe("locale catalogues", () => {
       expect(value, `${locale}:${key}`).not.toBe(key);
       expect(value.trim().length, `${locale}:${key}`).toBeGreaterThan(0);
     }
+  });
+
+  it("keeps English and Kiswahili keys aligned", () => {
+    const enKeys = Object.keys(resources.en.translation).sort();
+    const swKeys = Object.keys(resources.sw.translation).sort();
+    expect(swKeys).toEqual(enKeys);
   });
 });
 

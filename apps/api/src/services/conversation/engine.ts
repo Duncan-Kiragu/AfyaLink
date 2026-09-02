@@ -10,7 +10,6 @@ import {
   type StartSessionInput,
   type SubmitMessageInput,
 } from "@kkd/contracts";
-import type { SafetyEngine } from "@kkd/clinical-safety";
 import { resolveLocale } from "@kkd/i18n";
 import { createLogger } from "@kkd/observability";
 import { CURRENT_DISCLOSURE_VERSION, isDisclosureCurrent } from "../disclosure.js";
@@ -21,6 +20,17 @@ import {
   nextUnansweredField,
 } from "./question-pathway.js";
 import { unknownSafety, type SessionStore, type StoredSession } from "./session-store.js";
+
+/**
+ * Session-shaped port the conversation engine calls.
+ *
+ * Distinct from `@kkd/clinical-safety`'s `SafetyEngine`, which evaluates a
+ * `SeverityEvaluationInput` of facts rather than a live session. The adapter
+ * lives in `context.ts` so channel tests can still stub this port.
+ */
+export interface ConversationSafetyEngine {
+  evaluate(session: StoredSession): SafetyAssessment | Promise<SafetyAssessment>;
+}
 
 /**
  * The shared conversation engine.
@@ -45,7 +55,7 @@ const log = createLogger("api.conversation");
 export interface ConversationEngineDeps {
   sessions: SessionStore;
   ai: KkdAiService;
-  safety: SafetyEngine;
+  safety: ConversationSafetyEngine;
   /** Rejects diagnostic assertion/speculation in model output (spec §14). */
   guard?: DiagnosisGuard;
 }

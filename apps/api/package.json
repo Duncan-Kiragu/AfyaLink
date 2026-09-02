@@ -23,6 +23,7 @@
     "@kkd/pii": "workspace:*",
     "@kkd/scoring": "workspace:*",
     "@supabase/supabase-js": "catalog:",
+    "bullmq": "catalog:",
     "cors": "catalog:",
     "dotenv": "catalog:",
     "express": "catalog:",
