@@ -17,6 +17,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@kkd/testing": "workspace:*",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

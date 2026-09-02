@@ -8,3 +8,7 @@ export const regressionSuiteFolders = [
   "code-switching",
   "prompt-injection",
 ] as const;
+
+export type RegressionSuiteFolder = (typeof regressionSuiteFolders)[number];
+
+export * from "./diagnosis-language.js";
