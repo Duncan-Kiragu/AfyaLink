@@ -11,6 +11,8 @@
   },
   "scripts": {
     "dev": "turbo dev",
+    "build:api": "turbo run build --filter=@kkd/api",
+    "start:api": "pnpm --filter @kkd/api start",
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
