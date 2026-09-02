@@ -1,6 +1,22 @@
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - redis-data:/data
+
   presidio-analyzer:
     image: ghcr.io/data-privacy-stack/presidio-analyzer:latest
     ports:
       - "5002:3000"
     restart: unless-stopped
+
+volumes:
+  redis-data:

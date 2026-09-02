@@ -6,7 +6,7 @@ Scaffolding only. Implement behavior in the owning workstream; do not add a seco
 
 | Path | Owner | First ticket |
 | --- | --- | --- |
-| Repo bootstrap, `apps/api`, `apps/worker`, `packages/{config,observability,ai,integrations}` | Evans | KKD-BOOT-001 |
+| Repo bootstrap, `apps/api`, `apps/worker`, `packages/{config,observability,ai,integrations,queue}` | Evans | KKD-BOOT-001 |
 | `packages/pii` | Evans | KKD-PII-001 |
 | `packages/scoring`, `apps/api/src/modules/records`, `supabase` record tables | Duncan | KKD-RECORDS-001 — see `docs/runbooks/records.md` |
 | `packages/clinical-safety`, profiling | Antonia | KKD-SAFETY-001 |
@@ -21,6 +21,7 @@ Scaffolding only. Implement behavior in the owning workstream; do not add a seco
 - Scope is `@kkd/<name>`. Depend with `"workspace:*"`.
 - Public API is `src/index.ts` only. Import `@kkd/contracts`, never copy types into an app.
 - Runtime config is `@kkd/config`. Do not read `process.env` in feature code.
+- Redis connections and BullMQ queue/worker factories are `@kkd/queue`. Do not construct `new Queue` / `new Redis` in a feature module.
 - Claude is `@kkd/ai` only. Route handlers must not import `@anthropic-ai/sdk`.
 - External HTTP is `@kkd/integrations` adapters. No one-off `fetch` to providers inside features.
 - Logs/Sentry go through `@kkd/observability`. Do not log request bodies, transcripts, or PII.

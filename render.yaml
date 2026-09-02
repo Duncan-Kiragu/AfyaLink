@@ -1,7 +1,12 @@
 # Staging/production service names from the spec. Credentials stay in Render.
-# Fill build/start commands after KKD-BOOT-001 wires real deploys.
+# Fill remaining secrets in the dashboard. REDIS_URL is wired from the Key Value instance.
 
 services:
+  - type: keyvalue
+    name: kkd-redis-stage
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
   - type: web
     name: kkd-web-stage
     runtime: static
@@ -17,12 +22,24 @@ services:
     runtime: node
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/api build
     startCommand: pnpm --filter @kkd/api start
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: kkd-redis-stage
+          type: keyvalue
+          property: connectionString
 
   - type: worker
     name: kkd-worker-stage
     runtime: node
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/worker build
     startCommand: pnpm --filter @kkd/worker start
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: kkd-redis-stage
+          type: keyvalue
+          property: connectionString
 
   # Baileys holds one stateful WebSocket and one WhatsApp linked-device session,
   # so this must be a single-instance background worker rather than a scaled web
@@ -32,6 +49,12 @@ services:
     runtime: node
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @kkd/whatsapp-gateway build
     startCommand: pnpm --filter @kkd/whatsapp-gateway start
+    envVars:
+      - key: REDIS_URL
+        fromService:
+          name: kkd-redis-stage
+          type: keyvalue
+          property: connectionString
 
   - type: web
     name: kkd-mcp-stage

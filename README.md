@@ -29,6 +29,7 @@ Product rules (never diagnose, ephemeral clinic sessions, AI disclosure first) a
 nvm use
 pnpm install
 cp .env.example .env
+docker compose up -d redis
 pnpm dev
 ```
 
@@ -50,6 +51,7 @@ apps/worker       BullMQ processors (Evans / feature owners)
 apps/whatsapp     Baileys WhatsApp gateway, Render worker (Noordin)
 apps/mcp          MCP HTTP server (Evans + Antonia)
 packages/contracts     Zod schemas — import these, do not fork types
+packages/queue         Shared Redis/BullMQ connection, prefix `kkd:bull`
 packages/ai            Claude client abstraction
 packages/clinical-safety
 packages/scoring       Non-diagnostic System Score (Duncan / KKD-RECORDS-001)

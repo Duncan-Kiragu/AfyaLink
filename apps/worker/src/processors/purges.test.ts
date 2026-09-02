@@ -22,4 +22,14 @@ describe("processPurges", () => {
   it("passes when dependents are gone", async () => {
     await expect(processPurges(job, { remainingRows: async () => 0 })).resolves.toBeUndefined();
   });
+
+  it("deletes a session key by id without requiring a payload body", async () => {
+    await expect(
+      processPurges({
+        kind: "session_purge",
+        idempotencyKey: "session-purge:11111111-1111-4111-8111-111111111111",
+        sessionId: "11111111-1111-4111-8111-111111111111",
+      }),
+    ).resolves.toBeUndefined();
+  });
 });
