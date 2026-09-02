@@ -2,7 +2,7 @@
 
 **Scope:** Workstream 4, spec §8. Secondary: co-owned Workstream 9 (MCP), spec §13.
 **Ticket:** KKD-SAFETY-001 (§28). MCP ticket: KKD-MCP-001 (§33).
-**Status:** planning only — no code written yet.
+**Status:** Slices 1-7 and 9 implemented. Slice 8 deferred to Phase 2 (see §5 issue H). Slice 10 (MCP) not started.
 **Spec:** `docs/requirements/kkd-requirements-spec.md` v0.2, 2 September 2026.
 
 > **Numbering note.** The brief called the MCP Interface "section 24". In the spec, MCP Interface
@@ -70,38 +70,41 @@ Each item quotes the spec line that assigns it.
 
 ### 1.6 Health profiling — explicit consent — §8.4.A
 
-- [ ] §8.4.A, *"Before the first persistent check-in:"*
+- [x] §8.4.A, *"Before the first persistent check-in:"*
   - *"show what will be stored"*
   - *"show how often KKD will contact the user"*
   - *"allow channel selection"*
   - *"record consent version"*
   - *"allow withdrawal"*
-- [ ] §8.7: *"profile data exists only after explicit consent"*
-- [ ] §8.6: *"consent withdrawal stops future check-ins"*; §8.7: *"follow-ups stop after consent withdrawal"*
+- [x] §8.7: *"profile data exists only after explicit consent"*
+- [x] §8.6: *"consent withdrawal stops future check-ins"*; §8.7: *"follow-ups stop after consent withdrawal"*
 
 ### 1.7 Follow-up schedules — §8.4.B
 
-- [ ] §8.4.B: *"Support: daily / weekly / custom future check-in"*
-- [ ] §8.4.B: *"Store schedules in Supabase and enqueue/check due work through BullMQ."*
-- [ ] §8.4.B: *"Do not create one endlessly delayed job that cannot be audited; store the source schedule persistently and create delivery jobs from it."*
-  → schedule is the source of truth in Postgres; the `followups` queue only carries *delivery* jobs derived from it.
+- [x] §8.4.B: *"Support: daily / weekly / custom future check-in"*
+- [x] §8.4.B: *"Store schedules in Supabase and enqueue/check due work through BullMQ."*
+- [x] §8.4.B: *"Do not create one endlessly delayed job that cannot be audited; store the source schedule persistently and create delivery jobs from it."*
+  → schedule is the source of truth in Postgres (`follow_up_schedules`). V1 derives due
+  *occurrences* from it on read rather than enqueuing delivery jobs: there is no delivery
+  channel to enqueue for (see §5 issue H). Occurrence ids are stable and derived, so the
+  Phase 2 processor produces the same ones.
 
 ### 1.8 Check-in templates — §8.4.C
 
-- [ ] §8.4.C: *"Each check-in should be based on previously reported facts, not a disease label."*
+- [x] §8.4.C: *"Each check-in should be based on previously reported facts, not a disease label."*
   Examples given: *"Yesterday you rated the abdominal pain 6/10. What is it now?"*, *"Have you vomited since the last check-in?"*, *"Are you able to drink fluids?"*
 
 ### 1.9 Trends — §8.4.D
 
-- [ ] §8.4.D allowed: *"Your reported pain scores have decreased from 7 to 4 over three check-ins."* / *"You reported fever on four of the last five check-ins."* / *"This symptom has been marked as worsening for two consecutive check-ins."*
-- [ ] §8.4.D prohibited: *"This pattern means you have malaria."* / *"Your likelihood of X is increasing."*
-- [ ] §8.7: *"trends are factual and non-diagnostic"*
+- [x] §8.4.D allowed: *"Your reported pain scores have decreased from 7 to 4 over three check-ins."* / *"You reported fever on four of the last five check-ins."* / *"This symptom has been marked as worsening for two consecutive check-ins."*
+- [x] §8.4.D prohibited: *"This pattern means you have malaria."* / *"Your likelihood of X is increasing."*
+- [x] §8.7: *"trends are factual and non-diagnostic"*
 
 ### 1.10 Escalation from profile — §8.4.E
 
-- [ ] §8.4.E: *"Every new check-in must run the same severity engine."*
-- [ ] §8.4.E: *"A profile cannot suppress a new red flag merely because earlier check-ins were low urgency."*
-- [ ] §8.6: *"worsening follow-up can trigger a higher urgency"*
+- [x] §8.4.E: *"Every new check-in must run the same severity engine."*
+- [x] §8.4.E: *"A profile cannot suppress a new red flag merely because earlier check-ins were low urgency."*
+- [x] §8.6: *"worsening follow-up can trigger a higher urgency"*
 
 ### 1.11 Synchronous execution guarantee
 
@@ -114,9 +117,9 @@ Each item quotes the spec line that assigns it.
 - [ ] red flags cannot be bypassed by conversation ordering
 - [ ] missing critical fact returns `unknown` or asks a required question
 - [ ] deterministic same-input/same-rule-version behavior
-- [ ] worsening follow-up can trigger a higher urgency
-- [ ] no diagnostic language in severity or trend statements
-- [ ] consent withdrawal stops future check-ins
+- [x] worsening follow-up can trigger a higher urgency
+- [x] no diagnostic language in severity or trend statements
+- [x] consent withdrawal stops future check-ins
 - [ ] §21.1 also names **severity rules**, **trend calculations**, and **consent rules** as unit-test surfaces I own.
 
 ### 1.13 Obligations §8 does not list but other sections put on me
@@ -302,23 +305,27 @@ Each slice is independently mergeable and independently testable.
 - Safe telemetry: `urgency`, `ruleId` only (§18)
 - **Dependency:** Evans's session service for the session-backed variant *only*.
 
-### Slice 6 — Follow-up schedule domain logic + consent gate *(pure)*
+### Slice 6 — Follow-up schedule domain logic + consent gate *(pure)* — **DONE**
 - `daily | weekly | custom` cadence, next-due computation
 - Consent model: what-is-stored, contact frequency, channel selection, consent version, withdrawal (§8.4.A)
 - Test: *"consent withdrawal stops future check-ins"* (§8.6)
 - **Dependency:** consent-version shape agreed with Duncan. Logic is testable before storage exists.
 
-### Slice 7 — Schedule persistence + `POST`/`DELETE /api/v1/profile/followups`
+### Slice 7 — Schedule persistence + `POST`/`DELETE /api/v1/profile/followups` — **DONE**
 - Migrations for `follow_up_schedules` / `health_profile_settings` (pending §5 issue G)
 - Schedule is the persistent source of truth (§8.4.B)
 - **Dependency:** Duncan's Supabase/RLS baseline.
 
-### Slice 8 — `followups` worker processor
+### Slice 8 — `followups` worker processor — **NOT BUILT (deferred to Phase 2)**
+Superseded by the resolution of §5 issue H: V1 delivery is in-app pull, so there is no
+processor and no delivery channel. The schedule storage this slice would have read is
+already in place, so the processor is additive when a channel exists.
+
 - Due schedules → delivery jobs, idempotency key per occurrence (§4.G)
 - Worker delivers the *question*; it never evaluates severity (§2.1)
 - **Dependency:** Evans's BullMQ wiring + a delivery channel (§5 issue H).
 
-### Slice 9 — Check-in intake → re-evaluation + trends
+### Slice 9 — Check-in intake → re-evaluation + trends — **DONE**
 - Every check-in answer re-runs the engine synchronously (§8.4.E)
 - Trend statements from stored entries (§8.4.D)
 - Tests: *"worsening follow-up can trigger a higher urgency"*, *"a profile cannot suppress a new red flag"*
@@ -383,13 +390,40 @@ The audience list in the spec header includes *"clinical advisors"*, but §3's o
 §4.D lists `follow_up_schedules` and `health_profile_settings` among Evans's persistent tables. §6.2's Duncan table list **omits both**. `conventions.md` gives Duncan *"`supabase` record tables"*. `supabase/migrations/README.md` says *"Persistent tables are owned by feature workstreams"* — which points at me.
 **Decision needed:** I propose I own these two migrations, since §8.4.B assigns me the schedules. Needs Duncan's agreement so we do not collide on RLS patterns. *Blocks Slice 7.*
 
-### H. Which channel delivers a check-in in V1?
-§8.4.A requires *"allow channel selection"*, but:
-- `Channel` = `web | whatsapp | ussd | voice | mcp` — **there is no email or SMS channel**
-- WhatsApp/USSD (Noordin) and voice (Dancun) are **Phase 2**; profiling is **Phase 1**
-- A `notifications` queue exists with no transport
+### H. Which channel delivers a check-in in V1? — **RESOLVED: in-app pull**
 
-**Decision needed:** is V1 check-in delivery in-app-only (user sees due check-ins when they open the app), or do we block on a Phase 2 channel? **My recommendation:** in-app pull for V1, so schedules and consent are exercised without a Phase 2 dependency. *Blocks Slice 8.*
+**Decision (2 September 2026, Antonia):** V1 check-in delivery is **in-app pull**. A
+patient sees due check-ins when they open the app. There is no push delivery, no
+delivery-channel dependency, and **no BullMQ processor** — Slice 8 is not built.
+
+The constraints that forced it:
+
+- `Channel` is `web | whatsapp | ussd | voice | mcp`. There is **no SMS or email
+  channel**, and no transport exists for one.
+- WhatsApp/USSD (Noordin) and voice (Dancun) are **Phase 2** (§23); profiling is
+  **Phase 1**. Blocking Phase 1 on a Phase 2 channel would leave §8.4 unbuilt.
+- §2.1 forbids queueing anything that determines what the current user should do. A
+  pulled check-in is answered synchronously and re-evaluated synchronously, so the
+  safety path never enters a queue at all.
+
+How it is implemented:
+
+- `GET /api/v1/profile/checkins/due` is the delivery mechanism. It computes due
+  occurrences from the stored schedule, with the request's clock passed in.
+- §8.4.B's "store the source schedule persistently and create delivery jobs from it" is
+  honoured in the half that matters: `follow_up_schedules` is the persistent source of
+  truth, and an occurrence is derived from it (`<scheduleId>:<dueAt>`), never from an
+  endlessly delayed job. When a push channel lands, a `followups` processor reads the
+  same schedules and produces the same occurrence ids — nothing about the storage model
+  has to change.
+- §8.4.A's "allow channel selection" is implemented and **enforced**:
+  `V1_DELIVERABLE_CHECK_IN_CHANNELS` is `["web"]`, and consent to any other channel is
+  refused with `checkin_channel_not_available` rather than stored and quietly ignored. A
+  recorded preference KKD cannot honour would be a promise of contact it cannot keep.
+
+**Phase 2 follow-up:** when a delivery channel exists, add the `followups` processor
+(Slice 8) and widen `V1_DELIVERABLE_CHECK_IN_CHANNELS`. Both are additive; no stored
+schedule needs migrating.
 
 ### I. Who computes `completenessPercent`?
 §6.3.D lists completeness under Duncan's System Score: *"completeness is based on question-pathway fields actually answered"*. But **I define the question pathways** (§8.3.B step 4). `assessmentCompletenessSchema` (`{percent, missingFieldIds}`) already exists in `contracts/safety.ts` — my file — while `completenessPercent` lives in Duncan's `systemScoreSnapshotSchema`.

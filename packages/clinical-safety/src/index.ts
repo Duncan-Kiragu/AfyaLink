@@ -92,3 +92,55 @@ export {
   type DiagnosisLanguageInspection,
   type DiagnosisLanguageVerdict,
 } from "./diagnosis-language/guard.js";
+
+export {
+  checkInConsentDecision,
+  contactsPerWeek,
+  currentCheckInDisclosure,
+  isCheckInConsentActive,
+  isDeliverableCheckInChannel,
+  isWithinDisclosedFrequency,
+  type CheckInConsentDecision,
+  type CheckInConsentRefusal,
+  type CheckInConsentState,
+} from "./profiling/consent.js";
+
+export {
+  cadenceIntervalMs,
+  completeOccurrence,
+  firstDueAt,
+  InvalidInstantError,
+  isDue,
+  nextDueAt,
+  occurrenceId,
+  parseInstant,
+  toInstant,
+  withdrawSchedule,
+} from "./profiling/schedule.js";
+
+export {
+  buildCheckInQuestions,
+  isRenderableConceptCode,
+  type CheckInQuestionOptions,
+} from "./profiling/check-in-questions.js";
+
+export {
+  buildTrendStatements,
+  consecutiveWorseningStatements,
+  renderTrendStatementDraft,
+  reportFrequencyStatements,
+  severityChangeStatements,
+  type TrendBuildOptions,
+  type TrendBuildResult,
+} from "./profiling/trends.js";
+
+export {
+  CHECK_IN_CHANGE_FACT_KIND,
+  CHECK_IN_DENIAL_CARRIER_CONCEPT,
+  evaluateCheckIn,
+  factsFromCheckInAnswers,
+  observationsFromCheckInAnswers,
+  symptomsFromCheckInAnswers,
+  type CheckInEvaluation,
+  type EvaluateCheckInInput,
+} from "./profiling/re-evaluation.js";
