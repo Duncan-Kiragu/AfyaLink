@@ -12,3 +12,4 @@ export * from "./safety.js";
 export * from "./scores.js";
 export * from "./session.js";
 export * from "./symptoms.js";
+export * from "./voice.js";

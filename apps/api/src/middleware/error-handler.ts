@@ -20,6 +20,10 @@ export function errorHandler(
     res.status(400).json({ error: "invalid_request", requestId });
     return;
   }
+  if (err instanceof Error && "statusCode" in err && typeof err.statusCode === "number") {
+    res.status(err.statusCode).json({ error: err.message, requestId });
+    return;
+  }
   log.error({ requestId, path: req.path }, "unhandled_error");
   res.status(500).json({ error: "internal_error", requestId });
 }

@@ -13,6 +13,7 @@
     "test": "vitest run --passWithNoTests --config ../../vitest.package.config.ts"
   },
   "dependencies": {
+    "@kkd/config": "workspace:*",
     "@kkd/contracts": "workspace:*"
   },
   "devDependencies": {
