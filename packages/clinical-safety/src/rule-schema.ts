@@ -12,12 +12,25 @@ export const safetyRuleStatusSchema = z.enum(["draft", "active", "retired"]);
 export type SafetyRuleStatus = z.infer<typeof safetyRuleStatusSchema>;
 
 /**
- * Statuses the evaluator executes. `retired` rules are never run.
+ * Statuses the evaluator runs by default: clinically reviewed rules only.
  *
- * Draft rules execute so the engine is testable before clinical sign-off. Gating
- * draft rules out of production is a deployment concern, not an engine concern.
+ * `safetyRuleSchema` guarantees an `active` rule carries `reviewedBy` and `reviewedAt`,
+ * so an unreviewed rule can never decide an urgency class unless a caller explicitly
+ * asks for it.
  */
-export const EXECUTABLE_RULE_STATUSES: readonly SafetyRuleStatus[] = ["draft", "active"];
+export const REVIEWED_RULE_STATUSES: readonly SafetyRuleStatus[] = ["active"];
+
+/**
+ * Statuses the evaluator runs only when the caller passes
+ * `executeUnreviewedDraftRules: true`.
+ *
+ * Draft rules exist so the engine is testable before clinical sign-off. Opting in is a
+ * deliberate act at the call site, never a default, because a draft rule deciding a real
+ * patient's urgency would defeat the review requirement in spec §8.3.A.
+ *
+ * `retired` appears in neither list and is never run.
+ */
+export const UNREVIEWED_RULE_STATUSES: readonly SafetyRuleStatus[] = ["draft"];
 
 /**
  * Declarative condition language (spec §8.3.A, "conditions").
@@ -29,12 +42,25 @@ export const EXECUTABLE_RULE_STATUSES: readonly SafetyRuleStatus[] = ["draft", "
  * translate 'not mentioned' into 'denied'." Absence of information is handled by
  * `requiredInputs` and reported as a missing critical fact, never as a negative.
  */
+/**
+ * Comparable fact values. `ReportedFact.value` is `unknown` (spec §5.1), so rules may
+ * only compare it against a JSON primitive. There is no cross-type coercion: the string
+ * "true" never matches the boolean `true`.
+ */
+export type SafetyRuleFactValue = string | number | boolean;
+
+export const safetyRuleFactValueSchema = z.union([z.string(), z.number(), z.boolean()]);
+
 export type SafetyRuleCondition =
   /** The concept appears in the reported symptoms. */
   | { kind: "symptom_reported"; concept: string }
   /** The concept appears in a `deniedSymptoms` list, i.e. the patient explicitly denied it. */
   | { kind: "symptom_denied"; concept: string }
   | { kind: "symptom_severity_at_least"; concept: string; value: number }
+  /** A fact of this `kind` was reported, whatever its value. */
+  | { kind: "fact_reported"; factKind: string }
+  /** A fact of this `kind` was reported and its value matches. */
+  | { kind: "fact_equals"; factKind: string; value: SafetyRuleFactValue }
   | { kind: "measurement_at_least"; measurement: string; value: number; unit?: string }
   | { kind: "measurement_at_most"; measurement: string; value: number; unit?: string }
   | { kind: "all_of"; conditions: SafetyRuleCondition[] }
@@ -49,6 +75,12 @@ export const safetyRuleConditionSchema: z.ZodType<SafetyRuleCondition> = z.lazy(
       kind: z.literal("symptom_severity_at_least"),
       concept: z.string().min(1),
       value: z.number().min(0).max(10),
+    }),
+    z.object({ kind: z.literal("fact_reported"), factKind: z.string().min(1) }),
+    z.object({
+      kind: z.literal("fact_equals"),
+      factKind: z.string().min(1),
+      value: safetyRuleFactValueSchema,
     }),
     z.object({
       kind: z.literal("measurement_at_least"),

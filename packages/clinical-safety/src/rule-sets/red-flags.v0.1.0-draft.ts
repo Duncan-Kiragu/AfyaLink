@@ -79,6 +79,25 @@ export const redFlagsV0_1_0Draft: readonly SafetyRule[] = [
       "Placeholder pending clinical review. Threshold and unit handling require sign-off before this rule leaves draft.",
   },
   {
+    id: "rf.fever_with_recent_risk_area_travel",
+    version: "0.1.0",
+    status: "draft",
+    requiredInputs: ["symptom.fever", "fact.exposure.recent_travel_risk_area"],
+    conditions: [
+      { kind: "symptom_reported", concept: "fever" },
+      {
+        kind: "fact_equals",
+        factKind: "exposure.recent_travel_risk_area",
+        value: true,
+      },
+    ],
+    urgencyResult: "urgent_today",
+    patientMessageKey: "severity.explanation.fever_with_recent_risk_area_travel",
+    requiresHumanEscalation: false,
+    clinicalRationale:
+      "Placeholder pending clinical review. Fever reported together with recent travel to an area on the configured higher-risk exposure list warrants same-day assessment. The rule sets a disposition only; it asserts nothing about a cause, and the exposure list is configuration, not a rule input.",
+  },
+  {
     id: "rf.severe_abdominal_pain_without_relief",
     version: "0.1.0",
     status: "draft",

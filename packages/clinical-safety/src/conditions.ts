@@ -1,5 +1,14 @@
-import type { Measurement, ReportedSymptom } from "@kkd/contracts";
-import type { SafetyRuleCondition } from "./rule-schema.js";
+import type { Measurement, ReportedFact, ReportedSymptom } from "@kkd/contracts";
+import type { SafetyRuleCondition, SafetyRuleFactValue } from "./rule-schema.js";
+
+/**
+ * The normalized facts a condition is evaluated against (spec §5, `KkdSession`).
+ * Symptoms and facts travel together so a rule can read either.
+ */
+export interface ConditionContext {
+  readonly symptoms: readonly ReportedSymptom[];
+  readonly facts: readonly ReportedFact[];
+}
 
 /**
  * Concepts and measurement names are compared on a normalized form so that rule files
@@ -52,6 +61,31 @@ function matchingMeasurements(
 }
 
 /**
+ * Compares a `ReportedFact.value` (typed `unknown`) against a rule's literal.
+ *
+ * Strings are compared on their normalized form; numbers and booleans strictly. No
+ * cross-type coercion, so a rule never fires on a value shaped differently from the one
+ * the reviewer approved.
+ */
+function factValueMatches(actual: unknown, expected: SafetyRuleFactValue): boolean {
+  if (typeof expected === "string") {
+    return (
+      typeof actual === "string" &&
+      normalizeConcept(actual) === normalizeConcept(expected)
+    );
+  }
+  if (typeof expected === "number") {
+    return typeof actual === "number" && actual === expected;
+  }
+  return typeof actual === "boolean" && actual === expected;
+}
+
+function matchingFacts(facts: readonly ReportedFact[], factKind: string): ReportedFact[] {
+  const wanted = normalizeConcept(factKind);
+  return facts.filter((fact) => normalizeConcept(fact.kind) === wanted);
+}
+
+/**
  * Evaluates one condition against normalized facts. Pure and total: an unknown or
  * unparseable input makes a condition false, never throws.
  *
@@ -61,8 +95,9 @@ function matchingMeasurements(
  */
 export function evaluateCondition(
   condition: SafetyRuleCondition,
-  symptoms: readonly ReportedSymptom[],
+  context: ConditionContext,
 ): boolean {
+  const { symptoms, facts } = context;
   switch (condition.kind) {
     case "symptom_reported": {
       const wanted = normalizeConcept(condition.concept);
@@ -86,6 +121,14 @@ export function evaluateCondition(
           symptom.severity >= condition.value,
       );
     }
+    case "fact_reported": {
+      return matchingFacts(facts, condition.factKind).length > 0;
+    }
+    case "fact_equals": {
+      return matchingFacts(facts, condition.factKind).some((fact) =>
+        factValueMatches(fact.value, condition.value),
+      );
+    }
     case "measurement_at_least": {
       return matchingMeasurements(symptoms, condition.measurement, condition.unit).some(
         (value) => value >= condition.value,
@@ -97,13 +140,13 @@ export function evaluateCondition(
       );
     }
     case "all_of": {
-      return condition.conditions.every((child) => evaluateCondition(child, symptoms));
+      return condition.conditions.every((child) => evaluateCondition(child, context));
     }
     case "any_of": {
-      return condition.conditions.some((child) => evaluateCondition(child, symptoms));
+      return condition.conditions.some((child) => evaluateCondition(child, context));
     }
     case "none_of": {
-      return !condition.conditions.some((child) => evaluateCondition(child, symptoms));
+      return !condition.conditions.some((child) => evaluateCondition(child, context));
     }
   }
 }

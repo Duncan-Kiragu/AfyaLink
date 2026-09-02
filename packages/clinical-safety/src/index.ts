@@ -1,14 +1,21 @@
 export {
-  EXECUTABLE_RULE_STATUSES,
+  REVIEWED_RULE_STATUSES,
+  UNREVIEWED_RULE_STATUSES,
   safetyRuleConditionSchema,
+  safetyRuleFactValueSchema,
   safetyRuleSchema,
   safetyRuleStatusSchema,
   type SafetyRule,
   type SafetyRuleCondition,
+  type SafetyRuleFactValue,
   type SafetyRuleStatus,
 } from "./rule-schema.js";
 
-export { evaluateCondition, normalizeConcept } from "./conditions.js";
+export {
+  evaluateCondition,
+  normalizeConcept,
+  type ConditionContext,
+} from "./conditions.js";
 
 export {
   defaultRuleSetRegistry,
@@ -24,6 +31,7 @@ export {
   DeterministicSafetyEngine,
   evaluateSeverity,
   type SafetyEngine,
+  type SeverityEvaluationOptions,
 } from "./evaluator.js";
 
 /**

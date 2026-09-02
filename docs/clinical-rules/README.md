@@ -24,8 +24,18 @@ Until that is resolved (`docs/adr/ws4-plan.md` §5, issue F):
   `patientMessageKey` i18n key only. The reviewed strings are Brian's to author in
   `@kkd/i18n` (spec §10.4.A: "Critical fixed strings must live in reviewed locale files").
 
-`safetyRuleSchema` enforces the first point: parsing an `active` rule without both
-`reviewedBy` and `reviewedAt` fails.
+Two things enforce this rather than convention:
+
+- `safetyRuleSchema` refuses to parse an `active` rule that lacks both `reviewedBy` and
+  `reviewedAt`.
+- **The evaluator runs `active` rules only.** A `draft` rule fires only when the caller
+  passes `executeUnreviewedDraftRules: true`, which exists for tests and rule authoring.
+  Passing it in a patient-facing path means an unreviewed rule is deciding what a patient
+  is told to do, and should not survive code review.
+
+Because every shipped rule is currently `draft`, the default evaluation over the shipped
+rule set fires nothing and returns `unknown`. That is the intended state until a clinical
+reviewer exists — spec §8.3.C prefers `unknown` over reassurance nobody approved.
 
 ---
 
@@ -73,11 +83,16 @@ TypeScript, and so a rule set can be diffed and version-pinned.
 | `{ kind: "symptom_reported", concept }`                       | the concept appears in reported symptoms       |
 | `{ kind: "symptom_denied", concept }`                         | the concept appears in a `deniedSymptoms` list |
 | `{ kind: "symptom_severity_at_least", concept, value }`       | that symptom carries a severity ≥ `value`      |
+| `{ kind: "fact_reported", factKind }`                         | a fact of that `kind` was reported             |
+| `{ kind: "fact_equals", factKind, value }`                    | a fact of that `kind` has that value           |
 | `{ kind: "measurement_at_least", measurement, value, unit? }` | a measurement of that name is ≥ `value`        |
 | `{ kind: "measurement_at_most", measurement, value, unit? }`  | a measurement of that name is ≤ `value`        |
 | `{ kind: "all_of" \| "any_of" \| "none_of", conditions }`     | combinators, nestable                          |
 
-Three semantics matter more than the list:
+Rules read both `symptoms` and `facts` from the evaluation input. The fact conditions use
+`factKind` rather than `kind`, because `kind` is already the condition's own discriminator.
+
+Four semantics matter more than the list:
 
 1. **There is no "symptom not mentioned" condition, deliberately.** Spec §5.2: "Never
    translate 'not mentioned' into 'denied'." `symptom_denied` means the patient explicitly
@@ -89,6 +104,10 @@ Three semantics matter more than the list:
 3. **All confidence levels count as reported, including `uncertain`.** Ignoring uncertain
    reports would suppress red flags, which §8.3.C forbids. Deliberate, and itself pending
    clinical review.
+4. **Fact values are compared without coercion.** `ReportedFact.value` is `unknown`
+   (spec §5.1), so a rule may only compare it against a string, number, or boolean. The
+   string `"true"` never matches the boolean `true`, so a rule cannot fire on a value
+   shaped differently from the one the reviewer approved.
 
 ### Writing a rule
 
@@ -124,7 +143,7 @@ The evaluator resolves the exact `ruleSetVersion` it was given and throws
 Naming: `<set>@<semver>[-draft]`, e.g. `red-flags@0.1.0-draft`.
 
 Retired rules stay in the file with `status: "retired"` so historical assessments remain
-explainable. The evaluator runs `draft` and `active` rules and never runs `retired` ones.
+explainable. `retired` rules are never executed, with or without the draft opt-in.
 
 ---
 

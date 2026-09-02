@@ -4,7 +4,12 @@ import type {
   UrgencyClass,
 } from "@kkd/contracts";
 import { evaluateCondition } from "./conditions.js";
-import { EXECUTABLE_RULE_STATUSES, type SafetyRule } from "./rule-schema.js";
+import {
+  REVIEWED_RULE_STATUSES,
+  UNREVIEWED_RULE_STATUSES,
+  type SafetyRule,
+  type SafetyRuleStatus,
+} from "./rule-schema.js";
 import { defaultRuleSetRegistry, type RuleSetRegistry } from "./registry.js";
 
 /**
@@ -18,6 +23,20 @@ const URGENCY_PRECEDENCE: Record<UrgencyClass, number> = {
   monitor: 1,
   unknown: 0,
 };
+
+export interface SeverityEvaluationOptions {
+  /** Rule sets available for pinning. Defaults to those shipped with the package. */
+  registry?: RuleSetRegistry;
+  /**
+   * Execute `draft` rules, which by definition have no clinical sign-off (spec §8.3.A).
+   *
+   * Off by default: only `active` rules decide urgency, and `safetyRuleSchema` will not
+   * accept an `active` rule without `reviewedBy` and `reviewedAt`. Opt in for tests and
+   * rule authoring. Passing this in a patient-facing path means an unreviewed rule is
+   * deciding what a patient is told to do.
+   */
+  executeUnreviewedDraftRules?: boolean;
+}
 
 export interface SafetyEngine {
   evaluate(input: SeverityEvaluationInput): SafetyAssessment;
@@ -33,23 +52,32 @@ export interface SafetyEngine {
  * Spec §8.3.A: "Do not let Claude directly return the final urgency class without the
  * rule engine checking/deciding it." This function is the only source of an urgency class.
  *
+ * Only clinically reviewed (`active`) rules run unless the caller opts in via
+ * `executeUnreviewedDraftRules`.
+ *
  * `priorObservations` is accepted and carried by the contract but no rule reads it yet;
  * longitudinal escalation is Slice 9.
  */
 export function evaluateSeverity(
   input: SeverityEvaluationInput,
-  registry: RuleSetRegistry = defaultRuleSetRegistry,
+  options: SeverityEvaluationOptions = {},
 ): SafetyAssessment {
+  const { registry = defaultRuleSetRegistry, executeUnreviewedDraftRules = false } =
+    options;
   const ruleSet = registry.resolve(input.ruleSetVersion);
+
+  const executableStatuses: readonly SafetyRuleStatus[] = executeUnreviewedDraftRules
+    ? [...REVIEWED_RULE_STATUSES, ...UNREVIEWED_RULE_STATUSES]
+    : REVIEWED_RULE_STATUSES;
+
+  const context = { symptoms: input.symptoms, facts: input.facts };
 
   const fired: SafetyRule[] = [];
   for (const rule of ruleSet.rules) {
-    if (!EXECUTABLE_RULE_STATUSES.includes(rule.status)) {
+    if (!executableStatuses.includes(rule.status)) {
       continue;
     }
-    if (
-      rule.conditions.every((condition) => evaluateCondition(condition, input.symptoms))
-    ) {
+    if (rule.conditions.every((condition) => evaluateCondition(condition, context))) {
       fired.push(rule);
     }
   }
@@ -92,9 +120,9 @@ export function evaluateSeverity(
 }
 
 export class DeterministicSafetyEngine implements SafetyEngine {
-  constructor(private readonly registry: RuleSetRegistry = defaultRuleSetRegistry) {}
+  constructor(private readonly options: SeverityEvaluationOptions = {}) {}
 
   evaluate(input: SeverityEvaluationInput): SafetyAssessment {
-    return evaluateSeverity(input, this.registry);
+    return evaluateSeverity(input, this.options);
   }
 }

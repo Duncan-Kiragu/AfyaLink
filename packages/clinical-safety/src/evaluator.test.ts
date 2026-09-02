@@ -1,6 +1,10 @@
-import { severityEvaluationInputSchema, type ReportedSymptom } from "@kkd/contracts";
+import {
+  severityEvaluationInputSchema,
+  type ReportedFact,
+  type ReportedSymptom,
+} from "@kkd/contracts";
 import { describe, expect, it } from "vitest";
-import { evaluateSeverity } from "./evaluator.js";
+import { DeterministicSafetyEngine, evaluateSeverity } from "./evaluator.js";
 import {
   defineRuleSet,
   RuleSetRegistry,
@@ -14,9 +18,22 @@ function symptom(concept: string, extra: Partial<ReportedSymptom> = {}): Reporte
   return { id: `s.${concept}`, concept, confidence: "explicit", ...extra };
 }
 
-function evaluate(symptoms: readonly ReportedSymptom[], ruleSetVersion = RULE_SET) {
+function fact(kind: string, value: unknown): ReportedFact {
+  return { id: `f.${kind}`, kind, value, confidence: "explicit" };
+}
+
+/**
+ * Every rule shipped today is `draft`, so these tests opt in explicitly. Production
+ * callers must not: see the "unreviewed rules" block below.
+ */
+function evaluate(
+  symptoms: readonly ReportedSymptom[],
+  extra: { facts?: readonly ReportedFact[]; ruleSetVersion?: string } = {},
+) {
+  const { facts = [], ruleSetVersion = RULE_SET } = extra;
   return evaluateSeverity(
-    severityEvaluationInputSchema.parse({ symptoms, ruleSetVersion }),
+    severityEvaluationInputSchema.parse({ symptoms, facts, ruleSetVersion }),
+    { executeUnreviewedDraftRules: true },
   );
 }
 
@@ -93,13 +110,15 @@ describe("determinism", () => {
       ruleSetVersion: "test@0.0.1",
     });
 
-    expect(evaluateSeverity(input, registry).urgency).toBe("monitor");
+    expect(
+      evaluateSeverity(input, { registry, executeUnreviewedDraftRules: true }).urgency,
+    ).toBe("monitor");
     // The same facts under the shipped rule set establish nothing.
     expect(evaluate([MILD_HEADACHE]).urgency).toBe("unknown");
   });
 
   it("refuses an unpinned or unknown rule set version instead of falling back", () => {
-    expect(() => evaluate([CHEST_PAIN], "red-flags@9.9.9")).toThrow(
+    expect(() => evaluate([CHEST_PAIN], { ruleSetVersion: "red-flags@9.9.9" })).toThrow(
       UnknownRuleSetVersionError,
     );
   });
@@ -178,5 +197,168 @@ describe("red flags cannot be bypassed by conversation ordering", () => {
 
     expect(evaluate([severePain]).urgency).toBe("urgent_today");
     expect(evaluate([denied]).urgency).toBe("unknown");
+  });
+});
+
+/** Facts, not just symptoms, can decide a disposition (spec §5, `KkdSession.facts`). */
+describe("fact-based conditions", () => {
+  const FEVER = symptom("fever");
+  const RECENT_RISK_AREA_TRAVEL = fact("exposure.recent_travel_risk_area", true);
+
+  it("does not fire the travel rule on the symptom alone", () => {
+    expect(evaluate([FEVER]).urgency).toBe("unknown");
+  });
+
+  it("fires when the symptom and the reported exposure fact are both present", () => {
+    const assessment = evaluate([FEVER], { facts: [RECENT_RISK_AREA_TRAVEL] });
+
+    expect(assessment.urgency).toBe("urgent_today");
+    expect(assessment.ruleIds).toContain("rf.fever_with_recent_risk_area_travel");
+    expect(assessment.explanationKeys).toContain(
+      "severity.explanation.fever_with_recent_risk_area_travel",
+    );
+  });
+
+  it("does not fire when the exposure fact was reported as false", () => {
+    const assessment = evaluate([FEVER], {
+      facts: [fact("exposure.recent_travel_risk_area", false)],
+    });
+
+    expect(assessment.urgency).toBe("unknown");
+  });
+
+  it("does not fire on a fact of an unrelated kind", () => {
+    expect(
+      evaluate([FEVER], { facts: [fact("exposure.recent_contact", true)] }).urgency,
+    ).toBe("unknown");
+  });
+
+  it("lets a rule fire on facts alone, with no symptoms reported", () => {
+    const registry = new RuleSetRegistry([
+      defineRuleSet("facts-only@0.0.1", [
+        {
+          id: "test.fact_only",
+          version: "0.0.1",
+          status: "active",
+          requiredInputs: ["fact.exposure.recent_travel_risk_area"],
+          conditions: [
+            { kind: "fact_reported", factKind: "exposure.recent_travel_risk_area" },
+          ],
+          urgencyResult: "soon",
+          patientMessageKey: "severity.explanation.test_fact_only",
+          requiresHumanEscalation: false,
+          reviewedBy: "test-reviewer",
+          reviewedAt: "2026-09-02T00:00:00.000Z",
+        },
+      ]),
+    ]);
+
+    const assessment = evaluateSeverity(
+      severityEvaluationInputSchema.parse({
+        symptoms: [],
+        facts: [RECENT_RISK_AREA_TRAVEL],
+        ruleSetVersion: "facts-only@0.0.1",
+      }),
+      { registry },
+    );
+
+    expect(assessment.urgency).toBe("soon");
+    expect(assessment.ruleIds).toEqual(["test.fact_only"]);
+  });
+
+  it("matches a fact value without coercing across types", () => {
+    // The string "true" is not the boolean `true`.
+    const assessment = evaluate([FEVER], {
+      facts: [fact("exposure.recent_travel_risk_area", "true")],
+    });
+
+    expect(assessment.urgency).toBe("unknown");
+  });
+});
+
+/** An unreviewed rule must never decide a patient's urgency by accident (spec §8.3.A). */
+describe("unreviewed rules do not run by default", () => {
+  const draftInput = severityEvaluationInputSchema.parse({
+    symptoms: [CHEST_PAIN, BREATHLESSNESS],
+    ruleSetVersion: RULE_SET,
+  });
+
+  it("fires no draft rule when the caller does not opt in", () => {
+    const assessment = evaluateSeverity(draftInput);
+
+    expect(assessment.urgency).toBe("unknown");
+    expect(assessment.ruleIds).toEqual([]);
+    expect(assessment.explanationKeys).toEqual([]);
+    expect(assessment.requiresHumanEscalation).toBe(false);
+  });
+
+  it("fires the same draft rule once the caller opts in explicitly", () => {
+    const assessment = evaluateSeverity(draftInput, {
+      executeUnreviewedDraftRules: true,
+    });
+
+    expect(assessment.urgency).toBe("emergency");
+    expect(assessment.ruleIds).toEqual(["rf.chest_pain_with_breathlessness"]);
+  });
+
+  it("fires a reviewed active rule without any opt-in", () => {
+    const registry = new RuleSetRegistry([
+      defineRuleSet("reviewed@0.0.1", [
+        {
+          id: "test.reviewed",
+          version: "0.0.1",
+          status: "active",
+          requiredInputs: ["symptom.headache"],
+          conditions: [{ kind: "symptom_reported", concept: "headache" }],
+          urgencyResult: "monitor",
+          patientMessageKey: "severity.explanation.test_reviewed",
+          requiresHumanEscalation: false,
+          reviewedBy: "test-reviewer",
+          reviewedAt: "2026-09-02T00:00:00.000Z",
+        },
+      ]),
+    ]);
+
+    const input = severityEvaluationInputSchema.parse({
+      symptoms: [MILD_HEADACHE],
+      ruleSetVersion: "reviewed@0.0.1",
+    });
+
+    expect(evaluateSeverity(input, { registry }).urgency).toBe("monitor");
+  });
+
+  it("never runs a retired rule, even when draft execution is opted into", () => {
+    const registry = new RuleSetRegistry([
+      defineRuleSet("retired@0.0.1", [
+        {
+          id: "test.retired",
+          version: "0.0.1",
+          status: "retired",
+          requiredInputs: ["symptom.headache"],
+          conditions: [{ kind: "symptom_reported", concept: "headache" }],
+          urgencyResult: "emergency",
+          patientMessageKey: "severity.explanation.test_retired",
+          requiresHumanEscalation: false,
+        },
+      ]),
+    ]);
+
+    const input = severityEvaluationInputSchema.parse({
+      symptoms: [MILD_HEADACHE],
+      ruleSetVersion: "retired@0.0.1",
+    });
+
+    expect(
+      evaluateSeverity(input, { registry, executeUnreviewedDraftRules: true }).urgency,
+    ).toBe("unknown");
+  });
+
+  it("defaults DeterministicSafetyEngine to reviewed rules only", () => {
+    expect(new DeterministicSafetyEngine().evaluate(draftInput).urgency).toBe("unknown");
+    expect(
+      new DeterministicSafetyEngine({ executeUnreviewedDraftRules: true }).evaluate(
+        draftInput,
+      ).urgency,
+    ).toBe("emergency");
   });
 });
