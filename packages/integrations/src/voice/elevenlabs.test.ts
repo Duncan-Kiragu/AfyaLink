@@ -32,4 +32,37 @@ describe("fetchConversationToken", () => {
       headers: { "xi-api-key": "sk_test" },
     });
   });
+
+  it("includes the HTTP status when the token request fails", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("denied", { status: 401 })),
+    );
+
+    await expect(
+      fetchConversationToken({
+        ELEVENLABS_API_KEY: "sk_test",
+        ELEVENLABS_AGENT_ID: "agent_test",
+      }),
+    ).rejects.toThrow("elevenlabs_token_failed:401");
+  });
+
+  it("appends a safe ElevenLabs status code from an error body", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ detail: { status: "invalid_api_key", message: "no" } }), {
+            status: 401,
+          }),
+      ),
+    );
+
+    await expect(
+      fetchConversationToken({
+        ELEVENLABS_API_KEY: "sk_test",
+        ELEVENLABS_AGENT_ID: "agent_test",
+      }),
+    ).rejects.toThrow("elevenlabs_token_failed:401:invalid_api_key");
+  });
 });

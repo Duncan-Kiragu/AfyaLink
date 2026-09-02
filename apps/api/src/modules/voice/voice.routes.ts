@@ -4,6 +4,7 @@ import {
   aiDisclosureSchema,
   startVoiceSessionInputSchema,
   startVoiceSessionResponseSchema,
+  type LiveVoiceFallbackReason,
   submitPatientAnswerInputSchema,
   telephonyStatusEventSchema,
   voiceSessionIdInputSchema,
@@ -31,6 +32,22 @@ import {
 import { saveVoiceSession } from "./voice.store.js";
 
 const log = createLogger("voice.routes");
+
+function liveFallbackReasonFromError(reason: string): LiveVoiceFallbackReason {
+  if (reason === "elevenlabs_not_configured") {
+    return "elevenlabs_not_configured";
+  }
+  if (reason === "elevenlabs_token_invalid") {
+    return "elevenlabs_token_invalid";
+  }
+  if (reason.includes("missing_permissions")) {
+    return "elevenlabs_missing_permissions";
+  }
+  if (reason.startsWith("elevenlabs_token_failed:401")) {
+    return "elevenlabs_unauthorized";
+  }
+  return "elevenlabs_token_failed";
+}
 
 export const voiceRouter = Router();
 
@@ -85,14 +102,17 @@ voiceRouter.post("/sessions", validate(startVoiceSessionInputSchema), async (req
     let conversationToken: string | undefined;
     let agentId: string | undefined;
     let transport: "elevenlabs_webrtc" | "mock_browser" = "mock_browser";
+    let liveFallbackReason: LiveVoiceFallbackReason | undefined;
 
     try {
       const creds = await fetchConversationToken(env);
       conversationToken = creds.conversationToken;
       agentId = creds.agentId;
       transport = "elevenlabs_webrtc";
-    } catch {
-      log.info({ event: "elevenlabs_unavailable", status: "mock_browser" });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "elevenlabs_unavailable";
+      liveFallbackReason = liveFallbackReasonFromError(reason);
+      log.info({ event: "elevenlabs_unavailable", status: reason });
     }
 
     res.status(201).json(
@@ -101,6 +121,7 @@ voiceRouter.post("/sessions", validate(startVoiceSessionInputSchema), async (req
         transport,
         conversationToken,
         agentId,
+        liveFallbackReason,
         mockCall: { status: record.mockCallStatus },
         recordingEnabled: false,
       }),

@@ -22,6 +22,68 @@ import {
 
 type CallPhase = "idle" | "disclosed" | "live" | "summary";
 
+function stepIndex(phase: CallPhase): number {
+  if (phase === "idle") {
+    return 0;
+  }
+  if (phase === "summary") {
+    return 2;
+  }
+  return 1;
+}
+
+function VoiceSteps({ phase }: { phase: CallPhase }) {
+  const { t } = useTranslation();
+  const current = stepIndex(phase);
+  const labels = [t("voice.step.ready"), t("voice.step.live"), t("voice.step.summary")];
+
+  return (
+    <ol className="voice-steps" aria-label={t("voice.stepsLabel")}>
+      {labels.map((label, index) => (
+        <li
+          key={label}
+          className={index === current ? "is-current" : index < current ? "is-done" : undefined}
+          aria-current={index === current ? "step" : undefined}
+        >
+          <span className="voice-steps-index">{index + 1}</span>
+          {label}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function VoiceStatus({
+  word,
+  pulsing,
+}: {
+  word: string;
+  pulsing: boolean;
+}) {
+  return (
+    <div className="voice-status">
+      <span className={pulsing ? "voice-status-dot is-live" : "voice-status-dot"} aria-hidden="true" />
+      <p className="voice-status-word">{word}</p>
+    </div>
+  );
+}
+
+function TechnicalFallback({ reason }: { reason?: string }) {
+  const { t } = useTranslation();
+  if (!reason) {
+    return null;
+  }
+  return (
+    <div className="voice-note">
+      <p role="status">{t("voice.typedOnly")}</p>
+      <details>
+        <summary>{t("voice.technicalDetail")}</summary>
+        <p>{t(`voice.liveFallback.${reason}`)}</p>
+      </details>
+    </div>
+  );
+}
+
 function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }) {
   const { t, i18n } = useTranslation();
   const [locale, setLocale] = useState(i18n.language.startsWith("sw") ? "sw" : "en");
@@ -29,6 +91,7 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
   const [disclosure, setDisclosure] = useState({ version: "", text: "" });
   const [sessionId, setSessionId] = useState<string>();
   const [transport, setTransport] = useState<"elevenlabs_webrtc" | "mock_browser">("mock_browser");
+  const [liveFallbackReason, setLiveFallbackReason] = useState<string>();
   const [conversationToken, setConversationToken] = useState<string>();
   const [answer, setAnswer] = useState("");
   const [question, setQuestion] = useState("");
@@ -75,6 +138,7 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
       await ackVoiceDisclosure(started.session.id, disclosure.version);
       bindSession(started.session.id);
       setTransport(started.transport);
+      setLiveFallbackReason(started.liveFallbackReason);
       setConversationToken(started.conversationToken);
       setPhase("disclosed");
       await reportMockCallStatus(started.session.id, "ringing", crypto.randomUUID());
@@ -128,6 +192,7 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
     if (!sessionId) {
       return;
     }
+    setError(undefined);
     try {
       if (status === "connected") {
         endSession();
@@ -197,6 +262,8 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
     sessionIdRef.current = undefined;
     setPhase("idle");
     setSessionId(undefined);
+    setLiveFallbackReason(undefined);
+    setError(undefined);
     setSummary(undefined);
     setSafety(undefined);
     setCallbackNote(undefined);
@@ -237,45 +304,65 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
 
   if (!enabled) {
     return (
-      <main>
+      <main className="voice-page">
+        <p className="voice-kicker">
+          <Link className="voice-back" to="/">
+            {t("voice.home")}
+          </Link>
+        </p>
         <h1>{t("voice.title")}</h1>
-        <p>{t("voice.disabled")}</p>
+        <p className="voice-lede">{t("voice.disabled")}</p>
       </main>
     );
   }
 
+  const liveTransport = transport === "elevenlabs_webrtc";
+
   return (
-    <main>
-      <p className="voice-kicker">
-        <Link to="/">{t("voice.home")}</Link>
-      </p>
+    <main className={phase === "idle" || phase === "summary" ? "voice-page" : "voice-page is-focused"}>
+      <header className="voice-top">
+        <Link className="voice-back" to="/">
+          {t("voice.home")}
+        </Link>
+        <label className="voice-locale">
+          <span>{t("voice.language")}</span>
+          <select
+            value={locale}
+            onChange={(event) => setLocale(event.target.value)}
+            disabled={phase !== "idle"}
+          >
+            <option value="en">English</option>
+            <option value="sw">Kiswahili</option>
+          </select>
+        </label>
+      </header>
+
       <h1>{t("voice.title")}</h1>
-      <p>{t("voice.subtitle")}</p>
-      <label>
-        {t("voice.language")}
-        <select
-          value={locale}
-          onChange={(event) => setLocale(event.target.value)}
-          disabled={phase !== "idle"}
-        >
-          <option value="en">English</option>
-          <option value="sw">Kiswahili</option>
-        </select>
-      </label>
+      <p className="voice-lede">{t("voice.subtitle")}</p>
+      <VoiceSteps phase={phase} />
 
       {safety?.urgency === "emergency" ? (
         <p role="alert" className="voice-emergency">
+          <span className="voice-emergency-dot" aria-hidden="true" />
           {t("urgency.emergency")}
         </p>
       ) : null}
 
-      {error ? <p role="alert">{error}</p> : null}
-      {status === "error" && message ? <p role="alert">{message}</p> : null}
+      {error ? (
+        <p role="alert" className="voice-alert">
+          {error}
+        </p>
+      ) : null}
+      {status === "error" && message ? (
+        <p role="alert" className="voice-alert">
+          {message}
+        </p>
+      ) : null}
 
       {phase === "idle" ? (
-        <section className="voice-card">
+        <section className="voice-card voice-phase">
           <h2>{t("disclosure.title")}</h2>
-          <p>{disclosure.text}</p>
+          <p className="voice-copy">{disclosure.text}</p>
           <div className="voice-actions">
             <button className="voice-btn voice-btn-primary" type="button" onClick={() => void onAcknowledge()}>
               {t("disclosure.acknowledge")}
@@ -285,11 +372,23 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
       ) : null}
 
       {phase === "disclosed" ? (
-        <section className="voice-handset">
-          <p className="voice-kicker">{t("voice.recordingOff")}</p>
-          <p>{t("voice.mockHandset")}</p>
+        <section className="voice-handset voice-phase">
+          <VoiceStatus
+            word={liveTransport ? t("voice.status.startWhenReady") : t("voice.status.typeAnswer")}
+            pulsing={false}
+          />
+          <div className="voice-chips">
+            <span className="voice-chip">{t("voice.recordingOff")}</span>
+            <span className={liveTransport ? "voice-chip is-live" : "voice-chip"}>
+              {liveTransport ? t("voice.transport.liveShort") : t("voice.transport.mockShort")}
+            </span>
+          </div>
+          <p className="voice-copy">
+            {liveTransport ? t("voice.liveHandset") : t("voice.mockHandset")}
+          </p>
+          <TechnicalFallback reason={liveFallbackReason} />
           <div className="voice-actions">
-            <button className="voice-btn voice-btn-primary" type="button" onClick={() => void onStartCall()}>
+            <button className="voice-btn voice-btn-primary voice-btn-start" type="button" onClick={() => void onStartCall()}>
               {t("voice.startCall")}
             </button>
           </div>
@@ -297,18 +396,34 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
       ) : null}
 
       {phase === "live" ? (
-        <section className="voice-handset">
-          <p className="voice-kicker">
-            {t("voice.callStatus")}:{" "}
-            {transport === "elevenlabs_webrtc" ? t("voice.transport.live") : t("voice.transport.mock")}
-            {transport === "elevenlabs_webrtc" ? ` (${status})` : null}
+        <section className="voice-handset voice-phase">
+          <VoiceStatus
+            word={
+              liveTransport && status === "connected"
+                ? t("voice.status.listening")
+                : t("voice.status.typeAnswer")
+            }
+            pulsing={liveTransport && status === "connected"}
+          />
+          <div className="voice-chips">
+            <span className="voice-chip">{t("voice.recordingOff")}</span>
+            <span className={liveTransport && status === "connected" ? "voice-chip is-live" : "voice-chip"}>
+              {liveTransport && status === "connected"
+                ? t("voice.transport.liveShort")
+                : t("voice.transport.mockShort")}
+            </span>
+          </div>
+          {liveFallbackReason && transport === "mock_browser" ? (
+            <TechnicalFallback reason={liveFallbackReason} />
+          ) : null}
+          <p className="voice-question" aria-live="polite" aria-atomic="true">
+            {question}
           </p>
-          <p>{t("voice.recordingOff")}</p>
-          <p>{question}</p>
-          <form onSubmit={(event) => void onSubmitAnswer(event)}>
+          {liveTransport && status === "connected" ? <p className="voice-hint">{t("voice.speakOrType")}</p> : null}
+          <form className="voice-answer" onSubmit={(event) => void onSubmitAnswer(event)}>
             <label>
               {t("voice.yourAnswer")}
-              <textarea value={answer} onChange={(event) => setAnswer(event.target.value)} />
+              <textarea rows={4} value={answer} onChange={(event) => setAnswer(event.target.value)} />
             </label>
             <div className="voice-actions">
               <button className="voice-btn voice-btn-primary" type="submit">
@@ -323,15 +438,15 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
       ) : null}
 
       {phase === "summary" && summary ? (
-        <section className="voice-card">
+        <section className="voice-card voice-phase">
           <p className="voice-kicker">{t("voice.summaryTitle")}</p>
           <h2>{summary.reasonForSeekingCare}</h2>
-          <ul>
+          <ul className="voice-facts">
             {summary.symptomsReported.map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-          <p>{summary.recommendedNextAction}</p>
+          <p className="voice-copy">{summary.recommendedNextAction}</p>
           {saveCandidates.length > 0 ? (
             <fieldset className="fact-select">
               <legend>{t("records.selectFacts")}</legend>
@@ -360,7 +475,7 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
                   </Link>
                 ) : null}
               </div>
-              {saveNote ? <p>{saveNote}</p> : null}
+              {saveNote ? <p className="voice-hint">{saveNote}</p> : null}
             </fieldset>
           ) : null}
           <div className="voice-actions">
@@ -368,13 +483,13 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
               {t("voice.sendToHospital")}
             </Link>
           </div>
-          <p>{t("voice.locationHint")}</p>
+          <p className="voice-hint">{t("voice.locationHint")}</p>
           <label>
             {t("voice.smsPhone")}
             <input value={phone} onChange={(event) => setPhone(event.target.value)} />
           </label>
-          <div className="voice-actions">
-            <button className="voice-btn voice-btn-primary" type="button" onClick={() => void onSms()}>
+          <div className="voice-actions voice-actions-secondary">
+            <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onSms()}>
               {t("voice.sendSms")}
             </button>
             {sessionId ? (
@@ -391,8 +506,8 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
               {t("voice.done")}
             </button>
           </div>
-          {smsNote ? <p>{smsNote}</p> : null}
-          {callbackNote ? <p>{callbackNote}</p> : null}
+          {smsNote ? <p className="voice-hint">{smsNote}</p> : null}
+          {callbackNote ? <p className="voice-hint">{callbackNote}</p> : null}
         </section>
       ) : null}
     </main>

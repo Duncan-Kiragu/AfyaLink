@@ -64,6 +64,10 @@ describe("voice HTTP tools", () => {
 
     const { sessionId, transport } = await openSession();
     expect(transport).toBe("mock_browser");
+    const started = await request(app)
+      .post("/api/v1/voice/sessions")
+      .send({ locale: "en", disclosureVersion: DISCLOSURE_VERSION });
+    expect(started.body.liveFallbackReason).toBe("elevenlabs_not_configured");
 
     const status = await request(app).get("/api/v1/voice/status");
     expect(status.body.recordingEnabled).toBe(false);

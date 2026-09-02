@@ -31,11 +31,21 @@ export const startVoiceSessionInputSchema = z.object({
 });
 export type StartVoiceSessionInput = z.infer<typeof startVoiceSessionInputSchema>;
 
+export const liveVoiceFallbackReasonSchema = z.enum([
+  "elevenlabs_not_configured",
+  "elevenlabs_unauthorized",
+  "elevenlabs_missing_permissions",
+  "elevenlabs_token_failed",
+  "elevenlabs_token_invalid",
+]);
+export type LiveVoiceFallbackReason = z.infer<typeof liveVoiceFallbackReasonSchema>;
+
 export const startVoiceSessionResponseSchema = z.object({
   session: kkdSessionSchema,
   transport: voiceTransportSchema,
   conversationToken: z.string().optional(),
   agentId: z.string().optional(),
+  liveFallbackReason: liveVoiceFallbackReasonSchema.optional(),
   mockCall: z.object({
     status: mockCallStatusSchema,
   }),
