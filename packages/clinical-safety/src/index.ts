@@ -55,10 +55,40 @@ export {
   type SeverityEvaluationOptions,
 } from "./evaluator.js";
 
-/**
- * Post-generation guard over patient-facing model output (spec §14).
- * Implementation is Slice 4; ownership is still open (spec §10.4.D says "Evans/Antonia").
- */
-export interface DiagnosisLanguageGuard {
-  inspect(text: string, locale: string): Promise<{ allowed: boolean; reason?: string }>;
-}
+export {
+  anyOf,
+  defineLocalePatternSet,
+  GUARDED_SURFACES,
+  guardedSurfaceSchema,
+  near,
+  prohibitedPattern,
+  prohibitedPatternCategorySchema,
+  prohibitedPatternSchema,
+  words,
+  type GuardedSurface,
+  type LocalePatternSet,
+  type ProhibitedPattern,
+  type ProhibitedPatternCategory,
+} from "./diagnosis-language/pattern-schema.js";
+
+export {
+  defaultProhibitedPatternRegistry,
+  ProhibitedPatternRegistry,
+} from "./diagnosis-language/registry.js";
+
+export {
+  enPatternsV0_1_0Draft,
+  EN_PATTERNS_V0_1_0_DRAFT_VERSION,
+} from "./diagnosis-language/patterns/en.v0.1.0-draft.js";
+
+export {
+  DeterministicDiagnosisLanguageGuard,
+  inspectDiagnosisLanguage,
+  normalizeForMatching,
+  type DiagnosisLanguageCoverage,
+  type DiagnosisLanguageFinding,
+  type DiagnosisLanguageGuard,
+  type DiagnosisLanguageGuardOptions,
+  type DiagnosisLanguageInspection,
+  type DiagnosisLanguageVerdict,
+} from "./diagnosis-language/guard.js";
