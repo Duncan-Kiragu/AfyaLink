@@ -32,7 +32,7 @@ Scaffolding only. Implement behavior in the owning workstream; do not add a seco
 ```
 src/app/          providers, router, error boundary
 src/routes/       one file per URL from the spec
-src/features/     product slices (disclosure, conversation, summary, …)
+src/features/     product slices (disclosure, conversation, summary, voice, …)
 src/components/   presentational only
 src/i18n/         web wiring; strings live in @kkd/i18n
 src/api/          wraps @kkd/api-client

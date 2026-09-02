@@ -4,6 +4,7 @@ import { CheckInsPage } from "../routes/profile/CheckInsPage";
 import { HistoryPage } from "../routes/profile/HistoryPage";
 import { ProfilePage } from "../routes/profile/ProfilePage";
 import { PrivacyPage } from "../routes/settings/PrivacyPage";
+import { VoicePage } from "../routes/VoicePage";
 import { HomePage } from "../routes/HomePage";
 import { NewSessionPage } from "../routes/session/NewSessionPage";
 import { SessionPage } from "../routes/session/SessionPage";
@@ -11,6 +12,7 @@ import { SummaryPage } from "../routes/session/SummaryPage";
 
 export const router = createBrowserRouter([
   { path: "/", element: <HomePage /> },
+  { path: "/voice", element: <VoicePage /> },
   { path: "/session/new", element: <NewSessionPage /> },
   { path: "/session/:sessionId", element: <SessionPage /> },
   { path: "/session/:sessionId/summary", element: <SummaryPage /> },

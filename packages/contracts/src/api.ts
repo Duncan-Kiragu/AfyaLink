@@ -15,6 +15,19 @@ export const apiV1 = {
   providersSearch: "/api/v1/providers/search",
   profileFollowups: "/api/v1/profile/followups",
   voiceCallback: "/api/v1/voice/callback",
+  voiceCallbackCancel: "/api/v1/voice/callback/cancel",
+  voiceStatus: "/api/v1/voice/status",
+  voiceSessions: "/api/v1/voice/sessions",
+  voiceSession: (id: string) => `/api/v1/voice/sessions/${id}`,
+  voiceDisclosure: "/api/v1/voice/disclosure",
+  voiceDisclosureAck: "/api/v1/voice/disclosure/ack",
+  voiceToolSubmit: "/api/v1/voice/tools/submit_patient_answer",
+  voiceToolNextQuestion: "/api/v1/voice/tools/get_next_question",
+  voiceToolSafety: "/api/v1/voice/tools/evaluate_safety",
+  voiceToolSummary: "/api/v1/voice/tools/get_factual_summary",
+  voiceToolClose: "/api/v1/voice/tools/close_session",
+  voiceTelephonyStatus: "/api/v1/voice/telephony/status",
+  voiceSummarySms: "/api/v1/voice/summary-sms",
 } as const;
 
 export const apiModules = [

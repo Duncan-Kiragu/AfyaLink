@@ -7,6 +7,8 @@ export function HomePage() {
       <p>Web shell is scaffolded. Conversation UI is not implemented.</p>
       <p>
         <Link to="/session/new">Start session route</Link>
+        {" · "}
+        <Link to="/voice">Voice interview</Link>
       </p>
     </main>
   );
