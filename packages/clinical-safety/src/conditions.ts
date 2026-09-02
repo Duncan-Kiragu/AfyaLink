@@ -32,7 +32,11 @@ function measurementValue(measurement: Measurement): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function matchingMeasurements(
+/**
+ * Usable values of a named measurement across all reported symptoms. Shared with the
+ * pathway layer so a rule and a required field agree on what counts as measured.
+ */
+export function matchingMeasurements(
   symptoms: readonly ReportedSymptom[],
   name: string,
   unit: string | undefined,
