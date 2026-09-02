@@ -1,12 +1,12 @@
-import type { PiiFinding, PiiPolicy, PiiService } from "@kkd/contracts";
-
-export type { PiiService };
-
-export class UnimplementedPiiService implements PiiService {
-  detect(_text: string): Promise<PiiFinding[]> {
-    return Promise.reject(new Error("@kkd/pii detect is not implemented"));
-  }
-  sanitizeObject<T>(_value: T, _policy: PiiPolicy): Promise<T> {
-    return Promise.reject(new Error("@kkd/pii sanitizeObject is not implemented"));
-  }
-}
+export type { PiiService } from "@kkd/contracts";
+export { PiiRedactionFailedError } from "./errors.js";
+export {
+  PresidioPiiService,
+  createPiiService,
+  createPiiServiceFromEnv,
+  type CreatePiiServiceOptions,
+} from "./presidio-pii-service.js";
+export { PresidioAnalyzerClient } from "./presidio-client.js";
+export { InMemorySessionPlaceholderStore } from "./session-store.js";
+export { UnimplementedPiiService } from "./unimplemented.js";
+export type { PiiAnalyzer, SanitizeContext, SessionPlaceholderStore } from "./types.js";

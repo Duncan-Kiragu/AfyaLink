@@ -19,6 +19,7 @@ const baseSchema = z.object({
   REDIS_URL: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_MODEL: z.string().optional(),
+  PRESIDIO_ANALYZER_URL: z.string().optional(),
   EPHEMERAL_SESSION_TTL_SECONDS: z.coerce.number().int().positive().default(1800),
   SESSION_MAX_LIFETIME_SECONDS: z.coerce.number().int().positive().default(14400),
   SENTRY_DSN: z.string().optional(),
@@ -69,6 +70,7 @@ const productionRequired = [
   "REDIS_URL",
   "ANTHROPIC_API_KEY",
   "ANTHROPIC_MODEL",
+  "PRESIDIO_ANALYZER_URL",
 ] as const;
 
 export const envSchema = baseSchema.superRefine((env, ctx) => {
