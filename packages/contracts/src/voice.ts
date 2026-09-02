@@ -43,11 +43,10 @@ export const startVoiceSessionResponseSchema = z.object({
 });
 export type StartVoiceSessionResponse = z.infer<typeof startVoiceSessionResponseSchema>;
 
-export const acknowledgeDisclosureInputSchema = z.object({
-  sessionId: z.string().min(1),
-  disclosureVersion: z.string().min(1),
-});
-export type AcknowledgeDisclosureInput = z.infer<typeof acknowledgeDisclosureInputSchema>;
+export {
+  acknowledgeDisclosureInputSchema,
+  type AcknowledgeDisclosureInput,
+} from "./conversation.js";
 
 export const submitPatientAnswerInputSchema = z.object({
   sessionId: z.string().min(1),

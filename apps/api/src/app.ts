@@ -3,9 +3,10 @@ import { requestId } from "./middleware/request-id.js";
 import { securityHeaders } from "./middleware/security-headers.js";
 import { createCors } from "./middleware/cors.js";
 import { auth } from "./middleware/auth.js";
-import { rateLimiter } from "./middleware/rate-limit.js";
+import { rateLimiter, channelRateLimiter } from "./middleware/rate-limit.js";
 import { telemetry } from "./middleware/telemetry.js";
 import { errorHandler } from "./middleware/error-handler.js";
+import { captureRawBody } from "./middleware/channel-signature.js";
 import { healthRouter } from "./modules/health/health.routes.js";
 import { sessionsRouter } from "./modules/sessions/sessions.routes.js";
 import { conversationRouter } from "./modules/conversation/conversation.routes.js";
@@ -28,12 +29,26 @@ export function createApp() {
   app.use(requestId);
   app.use(securityHeaders);
   app.use(createCors());
-  app.use(express.json({ limit: "100kb" }));
+  // `verify` keeps the exact bytes so channel HMAC signatures can be checked
+  // against what was actually received, not against a re-serialization.
+  app.use(express.json({ limit: "100kb", verify: captureRawBody }));
+  // USSD aggregators post `application/x-www-form-urlencoded`.
+  app.use(express.urlencoded({ extended: false, limit: "16kb", verify: captureRawBody }));
   app.use(auth);
-  app.use(rateLimiter);
   app.use(telemetry);
 
   const v1 = express.Router();
+
+  // Channel callbacks authenticate by HMAC, not by user session, and their
+  // request rate is set by the provider rather than by a browser. They get
+  // their own limiter mounted before the general one.
+  const channels = express.Router();
+  channels.use(channelRateLimiter);
+  channels.use("/whatsapp", whatsappRouter);
+  channels.use("/ussd", ussdRouter);
+  v1.use("/integrations", channels);
+
+  v1.use(rateLimiter);
   v1.use("/health", healthRouter);
   v1.use("/sessions", sessionsRouter);
   v1.use("/conversation", conversationRouter);
@@ -45,8 +60,6 @@ export function createApp() {
   v1.use("/providers", providersRouter);
   v1.use("/location", locationRouter);
   v1.use("/integrations", integrationsRouter);
-  v1.use("/integrations/whatsapp", whatsappRouter);
-  v1.use("/integrations/ussd", ussdRouter);
   v1.use("/voice", voiceRouter);
   v1.use("/mcp-internal", mcpInternalRouter);
 

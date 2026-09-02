@@ -17,6 +17,7 @@
     "@kkd/clinical-safety": "workspace:*",
     "@kkd/config": "workspace:*",
     "@kkd/contracts": "workspace:*",
+    "@kkd/i18n": "workspace:*",
     "@kkd/integrations": "workspace:*",
     "@kkd/observability": "workspace:*",
     "@kkd/pii": "workspace:*",
@@ -32,6 +33,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@kkd/testing": "workspace:*",
     "@types/cors": "catalog:",
     "@types/express": "catalog:",
     "@types/node": "catalog:",

@@ -14,6 +14,8 @@ Product rules (never diagnose, ephemeral clinic sessions, AI disclosure first) a
 | Ephemeral state | Redis |
 | Jobs | BullMQ |
 | LLM | Claude API (via `@kkd/ai` only) |
+| WhatsApp | Baileys (WhatsApp Web multi-device) |
+| USSD | Africa's Talking |
 | Voice | ElevenLabs |
 | MCP | Model Context Protocol TypeScript SDK v2 |
 | Tests | Vitest, React Testing Library, Supertest, Playwright |
@@ -43,8 +45,9 @@ pnpm dev
 
 ```
 apps/web          Patient-facing React app (Brian)
-apps/api          Express `/api/v1` (Evans / shared)
+apps/api          Express `/api/v1` + shared conversation engine (Evans / shared)
 apps/worker       BullMQ processors (Evans / feature owners)
+apps/whatsapp     Baileys WhatsApp gateway, Render worker (Noordin)
 apps/mcp          MCP HTTP server (Evans + Antonia)
 packages/contracts     Zod schemas — import these, do not fork types
 packages/ai            Claude client abstraction
@@ -61,3 +64,16 @@ packages/testing       Fixtures and regression cases
 ```
 
 Internal packages are consumed as TypeScript source (`workspace:*`). Do not publish them.
+
+## Channels
+
+WhatsApp and USSD are channel adapters over the **shared** conversation engine
+in `apps/api/src/services/conversation`. No channel implements clinical
+behaviour of its own.
+
+- [Channel architecture](docs/architecture/channels.md)
+- [Channel privacy data flow](docs/architecture/channel-privacy-data-flow.md)
+- [WhatsApp gateway runbook](docs/runbooks/whatsapp-gateway.md)
+
+Both are behind feature flags (`FEATURE_WHATSAPP`, `FEATURE_USSD`) and fail at
+boot if enabled without their secrets. See `.env.example`.

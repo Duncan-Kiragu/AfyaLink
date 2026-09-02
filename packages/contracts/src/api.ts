@@ -39,6 +39,13 @@ export const apiV1 = {
   voiceToolClose: "/api/v1/voice/tools/close_session",
   voiceTelephonyStatus: "/api/v1/voice/telephony/status",
   voiceSummarySms: "/api/v1/voice/summary-sms",
+  /** Baileys gateway -> API. HMAC-signed, not a public webhook. */
+  whatsappInbound: "/api/v1/integrations/whatsapp/inbound",
+  whatsappStatus: "/api/v1/integrations/whatsapp/status",
+  whatsappOutbox: "/api/v1/integrations/whatsapp/outbox",
+  whatsappHealth: "/api/v1/integrations/whatsapp/health",
+  /** USSD aggregator callback. */
+  ussdCallback: "/api/v1/integrations/ussd",
 } as const;
 
 export const apiModules = [
