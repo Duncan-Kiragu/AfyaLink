@@ -21,6 +21,7 @@
     "@kkd/integrations": "workspace:*",
     "@kkd/observability": "workspace:*",
     "@kkd/pii": "workspace:*",
+    "@kkd/queue": "workspace:*",
     "@kkd/scoring": "workspace:*",
     "@supabase/supabase-js": "catalog:",
     "bullmq": "catalog:",

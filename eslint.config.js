@@ -56,7 +56,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["apps/api/**/*.ts", "apps/worker/**/*.ts", "apps/mcp/**/*.ts"],
+    files: ["apps/api/**/*.ts", "apps/worker/**/*.ts", "apps/mcp/**/*.ts", "packages/queue/**/*.ts"],
     languageOptions: {
       globals: globals.node,
     },

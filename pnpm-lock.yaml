@@ -212,6 +212,9 @@ importers:
       '@kkd/pii':
         specifier: workspace:*
         version: link:../../packages/pii
+      '@kkd/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
       '@kkd/scoring':
         specifier: workspace:*
         version: link:../../packages/scoring
@@ -456,6 +459,9 @@ importers:
       '@kkd/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@kkd/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
       '@supabase/supabase-js':
         specifier: 'catalog:'
         version: 2.113.0(@opentelemetry/api@1.9.1)
@@ -646,6 +652,28 @@ importers:
       '@kkd/testing':
         specifier: workspace:*
         version: link:../testing
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(jsdom@30.0.1(@noble/hashes@1.8.0))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(tsx@4.23.13))
+
+  packages/queue:
+    dependencies:
+      '@kkd/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      bullmq:
+        specifier: 'catalog:'
+        version: 6.3.4(ioredis@5.11.1)
+      ioredis:
+        specifier: 'catalog:'
+        version: 5.11.1
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
