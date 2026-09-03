@@ -1,6 +1,16 @@
 import { randomUUID } from "node:crypto";
-import type { ConsultationSummary, KkdSession, ReportedFact, ReportedSymptom } from "@kkd/contracts";
+import {
+  reportedFactSchema,
+  type ConsultationSummary,
+  type KkdSession,
+  type ReportedFact,
+  type ReportedSymptom,
+  type UrgencyClass,
+} from "@kkd/contracts";
+import { createLogger } from "@kkd/observability";
 import { stripDiagnosticLanguage } from "./diagnosis-guard.js";
+import { extractSymptom, isSelfLabelText, mapExtractedFactsToSymptoms } from "./extracted-facts.js";
+import { aiExtractionEnabled, getVoiceAi } from "./voice-ai.js";
 import { evaluateVoiceSafety } from "./voice-safety.stub.js";
 import {
   deleteVoiceSession,
@@ -9,9 +19,11 @@ import {
   type VoiceSessionRecord,
 } from "./voice.store.js";
 
-export const DISCLOSURE_VERSION = "voice.v1";
+export { extractSymptom };
 
-const SELF_DIAGNOSIS = /\b(i have|i think i have|google says i have|nina|nadhani nina)\b/i;
+const log = createLogger("voice.ai");
+
+export const DISCLOSURE_VERSION = "voice.v1";
 
 export function createVoiceSession(locale: string): VoiceSessionRecord {
   const now = new Date().toISOString();
@@ -76,35 +88,55 @@ export function assertDisclosure(record: VoiceSessionRecord): void {
   }
 }
 
-export function submitAnswer(sessionId: string, text: string): VoiceSessionRecord {
+export async function submitAnswer(sessionId: string, text: string): Promise<VoiceSessionRecord> {
   const record = requireOpenSession(sessionId);
   assertDisclosure(record);
   const trimmed = text.trim();
   const fact: ReportedFact = {
     id: randomUUID(),
-    kind: SELF_DIAGNOSIS.test(trimmed) ? "self_label_not_a_diagnosis" : "patient_statement",
+    kind: isSelfLabelText(trimmed) ? "self_label_not_a_diagnosis" : "patient_statement",
     value: trimmed,
     confidence: "explicit",
   };
   record.session.facts.push(fact);
-  record.session.symptoms.push(extractSymptom(trimmed));
+
+  let symptoms: ReportedSymptom[];
+  if (aiExtractionEnabled()) {
+    try {
+      const extracted = await getVoiceAi().extractReportedFacts({
+        sessionId: record.session.id,
+        locale: record.session.locale,
+        patientText: trimmed,
+        existingFactIds: record.session.facts.map((item) => item.id),
+      });
+      const seen = new Set(record.session.facts.map((item) => item.id));
+      for (const item of extracted.facts) {
+        const parsed = reportedFactSchema.safeParse(item);
+        if (!parsed.success || seen.has(parsed.data.id)) {
+          continue;
+        }
+        record.session.facts.push(parsed.data);
+        seen.add(parsed.data.id);
+      }
+      symptoms = mapExtractedFactsToSymptoms(extracted.facts, trimmed);
+    } catch (error) {
+      log.warn(
+        {
+          event: "voice_ai_extract_failed",
+          channel: "voice",
+          status: error instanceof Error ? error.name : "error",
+        },
+        "extractReportedFacts failed; using regex stub",
+      );
+      symptoms = [extractSymptom(trimmed)];
+    }
+  } else {
+    symptoms = [extractSymptom(trimmed)];
+  }
+
+  record.session.symptoms.push(...symptoms);
   refresh(record);
   return record;
-}
-
-function extractSymptom(text: string): ReportedSymptom {
-  const severityMatch = text.match(/\b([0-9]|10)\s*\/\s*10\b/) ?? text.match(/\b(?:pain|uchungu)\s*(?:is|=)?\s*([0-9]|10)\b/i);
-  const severity = severityMatch?.[1] ? Number.parseInt(severityMatch[1], 10) : undefined;
-  const concept = SELF_DIAGNOSIS.test(text) ? "unspecified_symptom" : "reported_experience";
-  return {
-    id: randomUUID(),
-    concept,
-    patientWording: text,
-    onset: /\b(yesterday|jana|hours?|masaa|days?|siku)\b/i.test(text) ? text : undefined,
-    duration: /\b(since|tangu|for)\b/i.test(text) ? text : undefined,
-    severity,
-    confidence: SELF_DIAGNOSIS.test(text) ? "uncertain" : "explicit",
-  };
 }
 
 export function nextQuestion(record: VoiceSessionRecord): string {
@@ -171,6 +203,52 @@ export function buildSummary(record: VoiceSessionRecord): ConsultationSummary {
   return {
     ...summary,
     reasonForSeekingCare: stripDiagnosticLanguage(summary.reasonForSeekingCare),
+  };
+}
+
+export async function factualSummary(record: VoiceSessionRecord): Promise<ConsultationSummary> {
+  if (aiExtractionEnabled()) {
+    try {
+      const summary = await getVoiceAi().summarizeSession({
+        sessionId: record.session.id,
+        locale: record.session.locale,
+        channel: "voice",
+      });
+      return stripSummaryLanguage(summary, record.session.safety.urgency);
+    } catch (error) {
+      log.warn(
+        {
+          event: "voice_ai_summary_failed",
+          channel: "voice",
+          status: error instanceof Error ? error.name : "error",
+        },
+        "summarizeSession failed; using buildSummary",
+      );
+    }
+  }
+  return buildSummary(record);
+}
+
+function stripSummaryLanguage(
+  summary: ConsultationSummary,
+  urgency: UrgencyClass,
+): ConsultationSummary {
+  const stripAll = (items: string[]): string[] => items.map((item) => stripDiagnosticLanguage(item));
+  return {
+    reasonForSeekingCare: stripDiagnosticLanguage(summary.reasonForSeekingCare),
+    symptomsReported: stripAll(summary.symptomsReported),
+    timeline: summary.timeline === undefined ? undefined : stripDiagnosticLanguage(summary.timeline),
+    severityAndMeasurements: stripAll(summary.severityAndMeasurements),
+    associatedSymptoms: stripAll(summary.associatedSymptoms),
+    symptomsExplicitlyDenied: stripAll(summary.symptomsExplicitlyDenied),
+    medicationAlreadyTaken: stripAll(summary.medicationAlreadyTaken),
+    relevantContext: stripAll(summary.relevantContext),
+    unknownOrUnanswered: stripAll(summary.unknownOrUnanswered),
+    recommendedNextAction: stripDiagnosticLanguage(summary.recommendedNextAction),
+    urgency,
+    promptId: summary.promptId,
+    promptVersion: summary.promptVersion,
+    model: summary.model,
   };
 }
 

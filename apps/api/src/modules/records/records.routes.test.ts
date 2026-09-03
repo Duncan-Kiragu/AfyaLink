@@ -221,7 +221,7 @@ describe("health records HTTP", () => {
     const recordId = await createOwnedRecord(USER_A);
     const voice = createVoiceSession("en");
     acknowledgeDisclosure(voice.session.id, "voice.v1");
-    const answered = submitAnswer(voice.session.id, "Stomach pain since morning 6/10");
+    const answered = await submitAnswer(voice.session.id, "Stomach pain since morning 6/10");
     const symptomId = answered.session.symptoms[0]?.id;
     expect(symptomId).toBeDefined();
 

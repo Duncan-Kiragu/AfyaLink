@@ -1,9 +1,11 @@
 import { ConversationProvider, useConversationControls, useConversationStatus } from "@elevenlabs/react";
+import "../../styles/voice.css";
 import type { ConsultationSummary, ReportedSymptom, SafetyAssessment } from "@kkd/contracts";
-import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { computeRecordScore, ensureRecordForVoice, persistFactsFromVoice } from "../records";
+import { VoiceOrb, type VoiceOrbMode } from "./VoiceOrb";
 import {
   ackVoiceDisclosure,
   cancelInterviewCallback,
@@ -32,40 +34,46 @@ function stepIndex(phase: CallPhase): number {
   return 1;
 }
 
-function VoiceSteps({ phase }: { phase: CallPhase }) {
+function VoiceProgress({ phase }: { phase: CallPhase }) {
   const { t } = useTranslation();
   const current = stepIndex(phase);
   const labels = [t("voice.step.ready"), t("voice.step.live"), t("voice.step.summary")];
 
   return (
-    <ol className="voice-steps" aria-label={t("voice.stepsLabel")}>
-      {labels.map((label, index) => (
-        <li
-          key={label}
-          className={index === current ? "is-current" : index < current ? "is-done" : undefined}
-          aria-current={index === current ? "step" : undefined}
-        >
-          <span className="voice-steps-index">{index + 1}</span>
-          {label}
-        </li>
-      ))}
-    </ol>
+    <>
+      <ol className="voice-sr-steps" aria-label={t("voice.stepsLabel")}>
+        {labels.map((label, index) => (
+          <li key={label} aria-current={index === current ? "step" : undefined}>
+            {label}
+          </li>
+        ))}
+      </ol>
+      <p className="voice-hud-index" aria-hidden="true">
+        <span>0{current + 1}</span>
+        {labels[current]}
+      </p>
+    </>
   );
 }
 
-function VoiceStatus({
-  word,
-  pulsing,
-}: {
-  word: string;
-  pulsing: boolean;
-}) {
-  return (
-    <div className="voice-status">
-      <span className={pulsing ? "voice-status-dot is-live" : "voice-status-dot"} aria-hidden="true" />
-      <p className="voice-status-word">{word}</p>
-    </div>
-  );
+function onStagePointer(event: PointerEvent<HTMLElement>) {
+  const x = event.clientX / window.innerWidth - 0.5;
+  const y = event.clientY / window.innerHeight - 0.5;
+  event.currentTarget.style.setProperty("--vx", x.toFixed(3));
+  event.currentTarget.style.setProperty("--vy", y.toFixed(3));
+}
+
+function orbMode(args: { live: boolean; mock: boolean; listening?: boolean }): VoiceOrbMode {
+  if (args.listening) {
+    return "listening";
+  }
+  if (args.mock) {
+    return "mock";
+  }
+  if (args.live) {
+    return "ready";
+  }
+  return "idle";
 }
 
 function TechnicalFallback({ reason }: { reason?: string }) {
@@ -81,6 +89,56 @@ function TechnicalFallback({ reason }: { reason?: string }) {
         <p>{t(`voice.liveFallback.${reason}`)}</p>
       </details>
     </div>
+  );
+}
+
+function uniqueLines(items: string[], exclude?: string): string[] {
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const item of items) {
+    const line = item.trim();
+    if (!line || line === exclude || seen.has(line)) {
+      continue;
+    }
+    seen.add(line);
+    lines.push(line);
+  }
+  return lines;
+}
+
+function labelUnknownFact(item: string, t: (key: string, options: { defaultValue: string }) => string): string {
+  return t(`voice.field.${item}`, { defaultValue: item });
+}
+
+function RecordBlock({
+  label,
+  items,
+  text,
+}: {
+  label: string;
+  items?: string[];
+  text?: string;
+}) {
+  if (text?.trim()) {
+    return (
+      <section className="voice-record-block">
+        <h2 className="voice-record-label">{label}</h2>
+        <p className="voice-copy">{text}</p>
+      </section>
+    );
+  }
+  if (!items || items.length === 0) {
+    return null;
+  }
+  return (
+    <section className="voice-record-block">
+      <h2 className="voice-record-label">{label}</h2>
+      <ul className="voice-facts">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -305,125 +363,155 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
   if (!enabled) {
     return (
       <main className="voice-page">
-        <p className="voice-kicker">
-          <Link className="voice-back" to="/">
-            {t("voice.home")}
-          </Link>
-        </p>
-        <h1>{t("voice.title")}</h1>
+        <div className="voice-atmosphere" aria-hidden="true">
+          <div className="voice-atmosphere-aurora" />
+          <div className="voice-atmosphere-mesh" />
+        </div>
+        <Link className="voice-back" to="/">
+          {t("voice.home")}
+        </Link>
+        <h1 className="voice-display">{t("voice.title")}</h1>
         <p className="voice-lede">{t("voice.disabled")}</p>
       </main>
     );
   }
 
   const liveTransport = transport === "elevenlabs_webrtc";
+  const liveConnected = liveTransport && status === "connected";
 
   return (
-    <main className={phase === "idle" || phase === "summary" ? "voice-page" : "voice-page is-focused"}>
-      <header className="voice-top">
+    <main className={`voice-page is-${phase}`} onPointerMove={onStagePointer}>
+      <div className="voice-atmosphere" aria-hidden="true">
+        <div className="voice-atmosphere-aurora" />
+        <div className="voice-atmosphere-mesh" />
+        <div className="voice-atmosphere-scan" />
+      </div>
+      <p className="voice-watermark" aria-hidden="true">
+        KKD
+      </p>
+
+      <header className="voice-hud">
         <Link className="voice-back" to="/">
           {t("voice.home")}
         </Link>
-        <label className="voice-locale">
-          <span>{t("voice.language")}</span>
-          <select
-            value={locale}
-            onChange={(event) => setLocale(event.target.value)}
+        <VoiceProgress phase={phase} />
+        <div className="voice-lang" role="group" aria-label={t("voice.language")}>
+          <button
+            type="button"
+            className={locale === "en" ? "is-on" : undefined}
             disabled={phase !== "idle"}
+            onClick={() => setLocale("en")}
           >
-            <option value="en">English</option>
-            <option value="sw">Kiswahili</option>
-          </select>
-        </label>
+            EN
+          </button>
+          <button
+            type="button"
+            className={locale === "sw" ? "is-on" : undefined}
+            disabled={phase !== "idle"}
+            onClick={() => setLocale("sw")}
+          >
+            SW
+          </button>
+        </div>
       </header>
 
-      <h1>{t("voice.title")}</h1>
-      <p className="voice-lede">{t("voice.subtitle")}</p>
-      <VoiceSteps phase={phase} />
-
-      {safety?.urgency === "emergency" ? (
-        <p role="alert" className="voice-emergency">
-          <span className="voice-emergency-dot" aria-hidden="true" />
-          {t("urgency.emergency")}
-        </p>
+      {phase === "idle" || phase === "disclosed" ? (
+        <p className="voice-recording">{t("voice.recordingOff")}</p>
       ) : null}
 
-      {error ? (
-        <p role="alert" className="voice-alert">
-          {error}
-        </p>
-      ) : null}
-      {status === "error" && message ? (
-        <p role="alert" className="voice-alert">
-          {message}
-        </p>
-      ) : null}
+      <div className="voice-alerts">
+        {safety?.urgency === "emergency" ? (
+          <p role="alert" className="voice-emergency">
+            <span className="voice-emergency-dot" aria-hidden="true" />
+            {t("urgency.emergency")}
+          </p>
+        ) : null}
+        {error ? (
+          <p role="alert" className="voice-alert">
+            {error}
+          </p>
+        ) : null}
+        {status === "error" && message ? (
+          <p role="alert" className="voice-alert">
+            {message}
+          </p>
+        ) : null}
+      </div>
 
       {phase === "idle" ? (
-        <section className="voice-card voice-phase">
-          <h2>{t("disclosure.title")}</h2>
-          <p className="voice-copy">{disclosure.text}</p>
-          <div className="voice-actions">
-            <button className="voice-btn voice-btn-primary" type="button" onClick={() => void onAcknowledge()}>
-              {t("disclosure.acknowledge")}
-            </button>
+        <div className="voice-hero voice-phase">
+          <div className="voice-hero-main">
+            <div className="voice-hero-copy">
+              <p className="voice-kicker">KKD</p>
+              <h1 className="voice-display">{t("voice.title")}</h1>
+            </div>
+            <div className="voice-hero-object">
+              <VoiceOrb mode="idle" />
+            </div>
           </div>
-        </section>
+          <section className="voice-hero-aside">
+            <h2>{t("disclosure.title")}</h2>
+            <p className="voice-copy">{disclosure.text}</p>
+            <div className="voice-actions">
+              <button className="voice-btn voice-btn-primary" type="button" onClick={() => void onAcknowledge()}>
+                {t("disclosure.acknowledge")}
+              </button>
+            </div>
+          </section>
+        </div>
       ) : null}
 
       {phase === "disclosed" ? (
-        <section className="voice-handset voice-phase">
-          <VoiceStatus
-            word={liveTransport ? t("voice.status.startWhenReady") : t("voice.status.typeAnswer")}
-            pulsing={false}
-          />
-          <div className="voice-chips">
-            <span className="voice-chip">{t("voice.recordingOff")}</span>
-            <span className={liveTransport ? "voice-chip is-live" : "voice-chip"}>
+        <section className="voice-stage voice-phase">
+          <p className="voice-meta">
+            <span>{t("voice.recordingOff")}</span>
+            <span className={liveTransport ? "is-live" : undefined}>
               {liveTransport ? t("voice.transport.liveShort") : t("voice.transport.mockShort")}
             </span>
-          </div>
+          </p>
+          <button className="voice-orb-hit" type="button" onClick={() => void onStartCall()}>
+            <VoiceOrb mode={orbMode({ live: liveTransport, mock: !liveTransport })} />
+            <span className="voice-orb-cta">{t("voice.startCall")}</span>
+          </button>
+          <p className="voice-status-word">
+            {liveTransport ? t("voice.status.startWhenReady") : t("voice.status.typeAnswer")}
+          </p>
           <p className="voice-copy">
             {liveTransport ? t("voice.liveHandset") : t("voice.mockHandset")}
           </p>
           <TechnicalFallback reason={liveFallbackReason} />
-          <div className="voice-actions">
-            <button className="voice-btn voice-btn-primary voice-btn-start" type="button" onClick={() => void onStartCall()}>
-              {t("voice.startCall")}
-            </button>
-          </div>
         </section>
       ) : null}
 
       {phase === "live" ? (
-        <section className="voice-handset voice-phase">
-          <VoiceStatus
-            word={
-              liveTransport && status === "connected"
-                ? t("voice.status.listening")
-                : t("voice.status.typeAnswer")
-            }
-            pulsing={liveTransport && status === "connected"}
-          />
-          <div className="voice-chips">
-            <span className="voice-chip">{t("voice.recordingOff")}</span>
-            <span className={liveTransport && status === "connected" ? "voice-chip is-live" : "voice-chip"}>
-              {liveTransport && status === "connected"
-                ? t("voice.transport.liveShort")
-                : t("voice.transport.mockShort")}
-            </span>
-          </div>
-          {liveFallbackReason && transport === "mock_browser" ? (
-            <TechnicalFallback reason={liveFallbackReason} />
-          ) : null}
-          <p className="voice-question" aria-live="polite" aria-atomic="true">
-            {question}
-          </p>
-          {liveTransport && status === "connected" ? <p className="voice-hint">{t("voice.speakOrType")}</p> : null}
-          <form className="voice-answer" onSubmit={(event) => void onSubmitAnswer(event)}>
-            <label>
-              {t("voice.yourAnswer")}
-              <textarea rows={4} value={answer} onChange={(event) => setAnswer(event.target.value)} />
+        <>
+          <section className="voice-live voice-phase">
+            <p className="voice-meta">
+              <span>{t("voice.recordingOff")}</span>
+              <span className={liveConnected ? "is-live" : undefined}>
+                {liveConnected ? t("voice.transport.liveShort") : t("voice.transport.mockShort")}
+              </span>
+            </p>
+            <div className="voice-live-stage">
+              <VoiceOrb
+                mode={orbMode({ live: liveConnected, mock: !liveConnected, listening: liveConnected })}
+              />
+              <p className="voice-question" aria-live="polite" aria-atomic="true">
+                {question}
+              </p>
+            </div>
+            {liveFallbackReason && transport === "mock_browser" ? (
+              <TechnicalFallback reason={liveFallbackReason} />
+            ) : null}
+            <p className="voice-hint">
+              {liveConnected ? t("voice.status.listening") : t("voice.status.typeAnswer")}
+              {liveConnected ? ` · ${t("voice.speakOrType")}` : ""}
+            </p>
+          </section>
+          <form className="voice-dock" onSubmit={(event) => void onSubmitAnswer(event)}>
+            <label className="voice-dock-line">
+              <span>{t("voice.yourAnswer")}</span>
+              <textarea rows={1} value={answer} onChange={(event) => setAnswer(event.target.value)} />
             </label>
             <div className="voice-actions">
               <button className="voice-btn voice-btn-primary" type="submit">
@@ -434,80 +522,95 @@ function VoiceCallInner({ sessionIdRef }: { sessionIdRef: { current?: string } }
               </button>
             </div>
           </form>
-        </section>
+        </>
       ) : null}
 
       {phase === "summary" && summary ? (
-        <section className="voice-card voice-phase">
-          <p className="voice-kicker">{t("voice.summaryTitle")}</p>
-          <h2>{summary.reasonForSeekingCare}</h2>
-          <ul className="voice-facts">
-            {summary.symptomsReported.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-          <p className="voice-copy">{summary.recommendedNextAction}</p>
-          {saveCandidates.length > 0 ? (
-            <fieldset className="fact-select">
-              <legend>{t("records.selectFacts")}</legend>
-              {saveCandidates.map((item) => (
-                <label key={item.id} className="fact-select-item">
-                  <input
-                    type="checkbox"
-                    checked={selectedFactIds.includes(item.id)}
-                    onChange={() => toggleFact(item.id)}
-                  />
-                  <span>{item.patientWording ?? item.concept}</span>
-                </label>
-              ))}
-              <div className="voice-actions">
-                <button
-                  className="voice-btn voice-btn-primary"
-                  type="button"
-                  disabled={savingRecord}
-                  onClick={() => void onSaveRecord()}
-                >
-                  {savingRecord ? t("records.saving") : t("consent.saveRecord")}
+        <section className="voice-sheet voice-phase">
+          <header className="voice-record-head">
+            <p className="voice-kicker">{t("records.ehrTitle")}</p>
+            <h1 className="voice-record-title">{summary.reasonForSeekingCare}</h1>
+          </header>
+          <div className="voice-record-body">
+            <RecordBlock
+              label={t("voice.record.chief")}
+              items={uniqueLines(summary.symptomsReported, summary.reasonForSeekingCare)}
+            />
+            <RecordBlock label={t("voice.record.timeline")} text={summary.timeline} />
+            <RecordBlock label={t("voice.record.intensity")} items={summary.severityAndMeasurements} />
+            <RecordBlock label={t("voice.record.associated")} items={summary.associatedSymptoms} />
+            <RecordBlock label={t("voice.record.denied")} items={summary.symptomsExplicitlyDenied} />
+            <RecordBlock label={t("voice.record.medications")} items={summary.medicationAlreadyTaken} />
+            <RecordBlock label={t("voice.record.context")} items={summary.relevantContext} />
+            <RecordBlock
+              label={t("voice.record.unknown")}
+              items={summary.unknownOrUnanswered.map((item) => labelUnknownFact(item, t))}
+            />
+            <RecordBlock label={t("voice.record.plan")} text={summary.recommendedNextAction} />
+          </div>
+          <footer className="voice-record-footer">
+            {saveCandidates.length > 0 ? (
+              <fieldset className="fact-select">
+                <legend>{t("records.selectFacts")}</legend>
+                {saveCandidates.map((item) => (
+                  <label key={item.id} className="fact-select-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedFactIds.includes(item.id)}
+                      onChange={() => toggleFact(item.id)}
+                    />
+                    <span>{item.patientWording ?? item.concept}</span>
+                  </label>
+                ))}
+                <div className="voice-actions">
+                  <button
+                    className="voice-btn voice-btn-primary"
+                    type="button"
+                    disabled={savingRecord}
+                    onClick={() => void onSaveRecord()}
+                  >
+                    {savingRecord ? t("records.saving") : t("consent.saveRecord")}
+                  </button>
+                  {saveNote ? (
+                    <Link className="voice-btn voice-btn-ghost" to="/profile/history">
+                      {t("records.viewHistory")}
+                    </Link>
+                  ) : null}
+                </div>
+                {saveNote ? <p className="voice-hint">{saveNote}</p> : null}
+              </fieldset>
+            ) : null}
+            <div className="voice-actions">
+              <Link className="voice-btn voice-btn-accent" to="/care-near-me">
+                {t("voice.sendToHospital")}
+              </Link>
+            </div>
+            <p className="voice-hint">{t("voice.locationHint")}</p>
+            <label>
+              {t("voice.smsPhone")}
+              <input value={phone} onChange={(event) => setPhone(event.target.value)} />
+            </label>
+            <div className="voice-actions voice-actions-secondary">
+              <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onSms()}>
+                {t("voice.sendSms")}
+              </button>
+              {sessionId ? (
+                <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onCallback()}>
+                  {t("voice.continueLater")}
                 </button>
-                {saveNote ? (
-                  <Link className="voice-btn voice-btn-ghost" to="/profile/history">
-                    {t("records.viewHistory")}
-                  </Link>
-                ) : null}
-              </div>
-              {saveNote ? <p className="voice-hint">{saveNote}</p> : null}
-            </fieldset>
-          ) : null}
-          <div className="voice-actions">
-            <Link className="voice-btn voice-btn-accent" to="/care-near-me">
-              {t("voice.sendToHospital")}
-            </Link>
-          </div>
-          <p className="voice-hint">{t("voice.locationHint")}</p>
-          <label>
-            {t("voice.smsPhone")}
-            <input value={phone} onChange={(event) => setPhone(event.target.value)} />
-          </label>
-          <div className="voice-actions voice-actions-secondary">
-            <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onSms()}>
-              {t("voice.sendSms")}
-            </button>
-            {sessionId ? (
-              <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onCallback()}>
-                {t("voice.continueLater")}
+              ) : null}
+              {callbackRequested ? (
+                <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onCancelCallback()}>
+                  {t("voice.cancelCallback")}
+                </button>
+              ) : null}
+              <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onHangUp()}>
+                {t("voice.done")}
               </button>
-            ) : null}
-            {callbackRequested ? (
-              <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onCancelCallback()}>
-                {t("voice.cancelCallback")}
-              </button>
-            ) : null}
-            <button className="voice-btn voice-btn-ghost" type="button" onClick={() => void onHangUp()}>
-              {t("voice.done")}
-            </button>
-          </div>
-          {smsNote ? <p className="voice-hint">{smsNote}</p> : null}
-          {callbackNote ? <p className="voice-hint">{callbackNote}</p> : null}
+            </div>
+            {smsNote ? <p className="voice-hint">{smsNote}</p> : null}
+            {callbackNote ? <p className="voice-hint">{callbackNote}</p> : null}
+          </footer>
         </section>
       ) : null}
     </main>

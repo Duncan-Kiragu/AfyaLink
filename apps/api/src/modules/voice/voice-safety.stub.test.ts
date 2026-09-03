@@ -10,11 +10,11 @@ describe("voice safety stub", () => {
     expect(evaluateVoiceSafety(record).urgency).toBe("unknown");
   });
 
-  it("raises emergency on cannot-breathe language without naming a disease", () => {
+  it("raises emergency on cannot-breathe language without naming a disease", async () => {
     resetVoiceSessions();
     const record = createVoiceSession("en");
     record.disclosureAcknowledged = true;
-    submitAnswer(record.session.id, "I cannot breathe and this started an hour ago pain 9/10");
+    await submitAnswer(record.session.id, "I cannot breathe and this started an hour ago pain 9/10");
     const safety = evaluateVoiceSafety(record);
     expect(safety.urgency).toBe("emergency");
     expect(safety.ruleSetVersion).toBe("voice-stub.v0");

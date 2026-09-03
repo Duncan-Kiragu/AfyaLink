@@ -12,17 +12,17 @@ import {
 import { resetVoiceSessions } from "./voice.store.js";
 
 describe("voice session facade", () => {
-  it("blocks answers before disclosure", () => {
+  it("blocks answers before disclosure", async () => {
     resetVoiceSessions();
     const record = createVoiceSession("en");
-    expect(() => submitAnswer(record.session.id, "headache")).toThrow(/disclosure/);
+    await expect(submitAnswer(record.session.id, "headache")).rejects.toThrow(/disclosure/);
   });
 
-  it("does not treat a self-label as a diagnosis concept", () => {
+  it("does not treat a self-label as a diagnosis concept", async () => {
     resetVoiceSessions();
     const record = createVoiceSession("en");
     acknowledgeDisclosure(record.session.id, DISCLOSURE_VERSION);
-    const updated = submitAnswer(record.session.id, "I think I have malaria, my head hurts 6/10 since yesterday");
+    const updated = await submitAnswer(record.session.id, "I think I have malaria, my head hurts 6/10 since yesterday");
     expect(updated.session.symptoms.some((item) => item.concept === "unspecified_symptom")).toBe(
       true,
     );

@@ -19,11 +19,11 @@ import { cancelQueuedVoiceJob, enqueueVoiceJob } from "./voice.queue.js";
 import {
   acknowledgeDisclosure,
   assertDisclosure,
-  buildSummary,
   cancelInterviewCallback,
   closeSession,
   createVoiceSession,
   DISCLOSURE_VERSION,
+  factualSummary,
   nextQuestion,
   requestInterviewCallback,
   requireOpenSession,
@@ -161,10 +161,10 @@ voiceRouter.get("/sessions/:id", (req, res, next) => {
 voiceRouter.post(
   "/tools/submit_patient_answer",
   validate(submitPatientAnswerInputSchema),
-  (req, res, next) => {
+  async (req, res, next) => {
     try {
       const body = submitPatientAnswerInputSchema.parse(req.body);
-      const record = submitAnswer(body.sessionId, body.text);
+      const record = await submitAnswer(body.sessionId, body.text);
       res.json({
         session: record.session,
         safety: record.session.safety,
@@ -217,7 +217,7 @@ voiceRouter.post(
 voiceRouter.post(
   "/tools/get_factual_summary",
   validate(voiceSessionIdInputSchema),
-  (req, res, next) => {
+  async (req, res, next) => {
     try {
       const body = voiceSessionIdInputSchema.parse(req.body);
       const record = requireOpenSession(body.sessionId);
@@ -225,7 +225,7 @@ voiceRouter.post(
       res.json({
         session: record.session,
         safety: record.session.safety,
-        summary: buildSummary(record),
+        summary: await factualSummary(record),
       });
     } catch (error) {
       next(error);
@@ -285,7 +285,7 @@ voiceRouter.post("/summary-sms", validate(voiceSmsRequestSchema), async (req, re
       sessionId: record.session.id,
       locale: record.session.locale,
       phoneLast4: last4,
-      summary: buildSummary(record),
+      summary: await factualSummary(record),
     });
     res.json(result);
   } catch (error) {
